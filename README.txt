@@ -112,7 +112,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 == Changelog ==
 
-= 0.1 =
+= 1.0 =
 * [新增]畅言基本功能；
 * [新增]同步wordpress本地评论到畅言；
 * [新增]同步畅言评论到wordpress本地；
