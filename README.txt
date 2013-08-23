@@ -120,7 +120,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 == Upgrade Notice ==
 
-= 0.1 =
+= 1.0 =
 畅言在与其他评论插件同时开启时可能会产生异常，请在使用前关闭其他评论插件。
 
 == DEMO ==
