@@ -229,7 +229,9 @@ class Changyan_Synchronizer
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $aUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) {
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        }
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
