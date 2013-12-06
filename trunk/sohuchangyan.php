@@ -3,7 +3,7 @@
 Plugin Name: 畅言评论系统
 Plugin URI: http://wordpress.org/plugins/changyan/
 Description: 即装即用，永久免费的社会化评论系统。为各类网站提供新浪微博、QQ、人人、搜狐等账号登录评论功能，同时提供强大的内容管理后台和智能云过滤服务。
-Version:  1.0
+Version:  1.1
 Author: 搜狐畅言
 Author URI: http://changyan.sohu.com
 */
@@ -95,7 +95,7 @@ function changyan_admin_init()
     //add_filter('post_row_actions', array($changyanPlugin, 'filterActions'));
 
     //level_10 is the admin level
-    if (version_compare($wp_version, '3.0', '<') && current_user_can('level_10')) {
+    if (version_compare($wp_version, '3.0', '<') && current_user_can('administrator')) {
         function changyan_wp_version_warnning()
         {
             echo '<div class="updated"><p><strong>您的WordPress版本低于3.0，请升级到最新版本以享受畅言提供的服务。</strong></p></div>';
@@ -104,7 +104,7 @@ function changyan_admin_init()
         //check wp version when run into the changyan page
         add_action(get_plugin_page_hook('changyan', 'changyan'), 'changyan_wp_version_warnning');
     }
-
+ 
     add_action('admin_head-edit-comments.php', array($changyanPlugin, 'showCommentsNotice'));
 
     //use ajax on wordpress
@@ -181,7 +181,6 @@ function changyan_add_menu_items()
                 'changyan_analysis',
                 array($changyanPlugin, 'analysis')
             );
-
             add_submenu_page(
                 'changyan',
                 '高级选项',
@@ -208,7 +207,7 @@ function changyan_deactivate()
     //**************************************************
     //Delete all options deserved when deactivited
     $changyanPlugin->delOption('changyan_script');
-    $changyanPlugin->delOption('changyan_appID');
+    $changyanPlugin->delOption('changyan_appId');
     $changyanPlugin->delOption('changyan_isBinded');
     $changyanPlugin->delOption('changyan_isSynchronized');
     */
@@ -220,7 +219,7 @@ if (is_admin()) {
     register_deactivation_hook(__FILE__, 'changyan_deactivate');
     //http://codex.wordpress.org/Plugin_API/Action_Reference/admin_menu
     //TODO 0627
-    add_action('admin_menu', 'changyan_add_menu_items');
+    add_action('admin_menu', 'changyan_add_menu_items',10);
     add_action('admin_init', 'changyan_admin_init');
 } else {
     add_action('init', 'changyan_init');
