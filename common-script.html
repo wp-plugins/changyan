@@ -1,3 +1,14 @@
+<style>
+#cyan-WP2cyan{
+	margin-bottom:0em;
+}
+.message-complete, .cyan-exported .message-start, .cyan-exporting .message-start, .status{
+	display:none;
+}
+.cyan-export .message-complete, .message-start, .cyan-exporting .status{
+	display:block;
+}
+</style>
 <script type="text/javascript">
     function sync2WPress() {
         var $ = jQuery;
@@ -13,32 +24,17 @@
                 },
                 timeout : 60000,
                 success : function (response) {
-                	if (response.success == 'true') {
-                        if ((response.search(/失败|error|fail|false/i)) >= 0) {
-                            if ((response.search(/空值/i)) >= 0) {
-                                alert("同步失败：APP ID错误，请检查您的输入");
-                            } else {
-                                alert("同步失败：" + response);
-                            }
-                            $('#cyan-export .message-complete').html('同步失败');
-                        } else {
-                    		$('#cyan-export .message-complete').html('同步完成');
+                	if (response.success == 'true') {    
+                    	$('#cyan-export .message-complete').html('同步完成');
+			} else {
+			alert(response.message);
+                        $('#cyan-export .message-complete').html('同步失败');
                         }
-			        } else {
-				        alert(response);
-                    }
-		},
-                /*
+	        },
                 error : function(XMLHttpRequest, error, status){
-                    alert(error);
-                    if(error != null && 0 == XMLHttpRequest.status){
-                        alert("连接失败，请检查您的网络设置");
-                    } else {
-                        alert("同步失败，HTTP错误代码：" + XMLHttpRequest.readyState);
-                    }
+                    alert("咦，您的网络有点问题，请稍后再试");
                     $('#cyan-export .message-complete').html('同步失败');
                 },
-                */
                 complete : function(){
                     $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
                 }
@@ -72,20 +68,14 @@
                             $('#cyan-WP2cyan .message-complete').html('同步完成');
                         }
                     } else {
+                        alert(response.message);
                         $('#cyan-WP2cyan .message-complete').html('同步失败');
-		    }
+		            }
                 },
-                /*
                 error : function(XMLHttpRequest, error, status){
-                    alert(error);
-                    if(error != null && 0 == XMLHttpRequest.status){
-                        alert("连接失败，请检查您的网络设置");
-                    } else {
-                        alert("同步失败，HTTP错误代码：" + XMLHttpRequest.readyState);
-                    }
+                    alert("咦，您的网络有点问题，请稍后再试");
                     $('#cyan-WP2cyan .message-complete').html('同步失败');
                 },
-                */
                 complete : function(){
                     $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
                 }
@@ -141,10 +131,8 @@
                 ajaxurl,
                 data,
                 function (response) {
-                    if (response.success == 'true') {
-                        alert("提交成功！");
-                    } else {
-                        alert("提交异常，请检查您的网络设置");
+                    if (response.success != 'true') {
+                        alert("自动同步配置提交异常，请检查您的网络设置");
                     }
                 }
         );
@@ -177,14 +165,4 @@
             $appButton.addClass('button-primary').val("提交");
         }
     }
-
-    jQuery(function () {
-        var $ = jQuery;
-        var iframe = $('#rightBar_1');
-        var resetIframeHeight = function () {
-            iframe.height($(window).height() - iframe.offset().top - 70);
-        };
-        resetIframeHeight();
-        $(window).resize(resetIframeHeight);
-    });
 </script>

@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="<?php echo $this->pluginDirUrl; ?>styles.css" type="text/css" />
+<div class="wrap">
 <?php screen_icon();
 ini_set('max_execution_time', '0');
 require_once CHANGYAN_PLUGIN_PATH . '/Handler.php';
@@ -121,5 +122,6 @@ include_once dirname(__FILE__) . '/header.html';
     </table>
 </div>
 <?php
+include_once dirname(__FILE__) . '/scripts.html';
 include_once dirname(__FILE__) . '/common-script.html';
 ?>

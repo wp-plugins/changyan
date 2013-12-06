@@ -63,12 +63,8 @@ include_once dirname(__FILE__) . '/header.html';
                     <tr>
                         <td><input type="text" id="appID" style="width: 210px"
                                    value="<?php
-                                   $aScript = $changyanPlugin->getOption('changyan_script');
-                                   if (!empty($aScript)) {
-                                       $appID = explode("'", $aScript);
-                                       $appID = $appID[1];
-                                       echo trim($appID);
-                                   }
+                                   $appId = $changyanPlugin->getOption('changyan_appId');
+                                   echo $appId;
                                    ?>" />
                         </td>
                     </tr>
@@ -80,9 +76,7 @@ include_once dirname(__FILE__) . '/header.html';
                             <input type="text" id="appKey" style="width: 210px"
                                    value="<?php
                                    $appKey = $changyanPlugin->getOption('changyan_appKey');
-                                   if (!empty($appKey)) {
-                                       echo trim($appKey);
-                                   }
+                                   echo $appKey;
                                    ?>" />
                         </td>
                     </tr>

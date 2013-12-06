@@ -137,12 +137,18 @@ class Changyan_Handler
 
     public function sync2Wordpress()
     {
-        $this->changyanSynchronizer->sync2Wordpress();
+       header( "Content-Type: application/json" );
+        $response = $this->changyanSynchronizer->sync2Wordpress();
+	echo $response;
+        die();
     }
 
     public function sync2Changyan()
     {
-        $this->changyanSynchronizer->sync2Changyan();
+        header( "Content-Type: application/json" );
+        $response = $this->changyanSynchronizer->sync2Changyan();
+	echo $response;
+        die();
     }
     //deprecated
     public function saveScript()
@@ -152,8 +158,11 @@ class Changyan_Handler
         $aScript = trim($aScript);
         $aScript = stripslashes($aScript);
         $this->setOption('changyan_script', $aScript);
-
-        die($aScript);
+        unset($aScript);
+        header( "Content-Type: application/json" );
+        $response = json_encode(array('success'=>'true'));
+        echo $response;
+        exit;
     }
 
     public function saveAppID()
@@ -173,17 +182,21 @@ class Changyan_Handler
         $scriptPart0 = "<div id=\"SOHUCS\"></div><script>(function(){var appid = '";
         $scriptPart1 = "',conf = '";
         $scriptPart2 = "';
-var doc = document,
-s = doc.createElement('script'),
-h = doc.getElementsByTagName('head')[0] || doc.head || doc.documentElement;
-s.type = 'text/javascript';
-s.charset = 'utf-8';
-s.src =  'http://assets.changyan.sohu.com/upload/changyan.js?conf='+ conf +'&appid=' + appid;
-h.insertBefore(s,h.firstChild);
-})()</script>";
+        var doc = document,
+        s = doc.createElement('script'),
+        h = doc.getElementsByTagName('head')[0] || doc.head || doc.documentElement;
+        s.type = 'text/javascript';
+        s.charset = 'utf-8';
+        s.src =  'http://assets.changyan.sohu.com/upload/changyan.js?conf='+ conf +'&appid=' + appid;
+        h.insertBefore(s,h.firstChild);
+        })()</script>";
         $script = $scriptPart0 . $appID . $scriptPart1 . $conf . $scriptPart2;
         $this->setOption('changyan_script', $script);
-        die($appID);
+        $this->setOption('changyan_appId', $appID);
+        unset($appID);
+        header("Content-Type: application/json");
+        $response = json_encode(array('success'=>'true'));
+        die($response);
     }
 
     public function saveAppKey()
@@ -193,8 +206,10 @@ h.insertBefore(s,h.firstChild);
         $appKey = trim($appKey);
         //save
         $this->setOption('changyan_appKey', $appKey);
-
-        die($appKey);
+        unset($appKey);
+        header( "Content-Type: application/json" ); 
+        $response = json_encode(array('success'=>'true'));
+        die($response);
     }
 
     public function setCron()
@@ -208,18 +223,21 @@ h.insertBefore(s,h.firstChild);
         } else {
             $flag = $this->setOption('changyan_isCron', false);
         }
-
+        header( "Content-Type: application/json" );
+        $response = ""; 
         if (!empty($flag) || $flag != false) {
-            die("TRUE");
+            $response = json_encode(array('success'=>'true'));
         } else {
-            die("FALSE");
+            $response = json_encode(array('success'=>'false'));
         }
+        die($response);
     }
 
     //run synchronization to wordpress
     public function cronSync()
     {
-        $this->sync2Wordpress();
+        $response = $this->sync2Wordpress();
+        die($response);
     }
 }
 
