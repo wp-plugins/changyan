@@ -2,6 +2,7 @@
 ini_set('max_execution_time', '0');
 
 require_once CHANGYAN_PLUGIN_PATH . '/Synchronizer.php';
+require_once CHANGYAN_PLUGIN_PATH . '/Client.php';
 class Changyan_Handler
 {
     const version = '1.0';
@@ -119,15 +120,10 @@ class Changyan_Handler
         }
 
         include dirname(__FILE__) . '/settings.php';
-
-        //synchronization
-        //$this->sync2Wordpress();
-        //$this->sync2Changyan();
     }
     //deprecated
     public function account()
     {
-        //must check that the user has the required capability
         if (!current_user_can('manage_options')) {
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
@@ -169,16 +165,14 @@ class Changyan_Handler
     {
         //set auto cron
         $this->setOption('changyan_isCron', true);
-        //get appID from POST[]
-        $appID = $_POST['appID'];
-        $appID = trim($appID);
-        $appIDArray = array(
-            'app_id' => $appID
+        $appId = $_POST['appID'];
+        $appId = trim($appId);
+        $params = array(
+            'app_id' => $appId
         );
-        //get conf using appID through http://changyan.sohu.com/getConf?app_id=cyqqryvMq
-        $aUrl = $this->changyanSynchronizer->buildURL($appIDArray, "http://changyan.sohu.com/getConf");
-        $conf = $this->changyanSynchronizer->getContents_curl($aUrl);
-        //build script
+        $client = new ChangYan_Client();
+        $url = 'http://changyan.sohu.com/getConf';
+        $conf = $client->httpRequest($url, 'GET', $params);
         $scriptPart0 = "<div id=\"SOHUCS\"></div><script>(function(){var appid = '";
         $scriptPart1 = "',conf = '";
         $scriptPart2 = "';
@@ -190,10 +184,10 @@ class Changyan_Handler
         s.src =  'http://assets.changyan.sohu.com/upload/changyan.js?conf='+ conf +'&appid=' + appid;
         h.insertBefore(s,h.firstChild);
         })()</script>";
-        $script = $scriptPart0 . $appID . $scriptPart1 . $conf . $scriptPart2;
+        $script = $scriptPart0 . $appId . $scriptPart1 . $conf . $scriptPart2;
         $this->setOption('changyan_script', $script);
-        $this->setOption('changyan_appId', $appID);
-        unset($appID);
+        $this->setOption('changyan_appId', $appId);
+        unset($appId);
         header("Content-Type: application/json");
         $response = json_encode(array('success'=>'true'));
         die($response);
