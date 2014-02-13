@@ -52,11 +52,12 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 = 联系我们 =
 
-客服电话：010-62728186
+客服电话：010-56603151
 官方网站：[畅言](http://changyan.sohu.com/ "畅言")
-商务qq：410086030
+商务qq：252343044
 客服qq群：286495763
- 
+
+
 == Installation ==
 
 1. 在WordPress 插件库中搜索"changyan", 下载并启用；
