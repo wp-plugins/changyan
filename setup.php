@@ -128,5 +128,5 @@ include_once dirname(__FILE__) . '/header.html';
 </div>
 
 <?php
-include_once dirname(__FILE__) . '/scripts.html';
+include_once dirname(__FILE__) . '/common-script.html';
 ?>
