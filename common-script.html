@@ -96,6 +96,9 @@
         jQuery.post(ajaxurl, data, function (response) {
             if (response.success == 'true') {
                 $('#appID').val(appID);
+           } else {
+                alert('站点不存在，请检查AppID输入正确！');
+                return -1;
            }
         });
         return 0;
@@ -139,6 +142,48 @@
     });
     
     
+    jQuery('#changyanSeo').click(function () {
+        var $ = jQuery;
+        var isSEOChecked = !!($(this).attr('checked'));
+        var data = {
+            action: 'changyan_seo',
+            isSEOChecked: isSEOChecked
+        };
+        $.post(
+                ajaxurl,
+                data,
+                function (response) {
+                    if (response.success == 'true') {
+                        
+                    } else {
+                        alert("提交异常，请检查您的网络设置");
+                    }
+                }
+        );
+    });
+
+
+    jQuery('#changyanStyle').click(function () {
+        var $ = jQuery;
+        var isQuick = !($(this).attr('checked'));
+        var data = {
+            action: 'changyan_quick_load',
+            isQuick: isQuick
+        };
+        $.post(
+                ajaxurl,
+                data,
+                function (response) {
+                    if (response.success == 'true') {
+                        
+                    } else {
+                        alert("提交异常，请检查您的网络设置");
+                    }
+                }
+        );
+    });
+
+
     function saveAppKey_AppID() {
         var $ = jQuery;
         var $appButton = $('#appButton');
@@ -163,6 +208,44 @@
             $('#appKey').attr('disabled', false);
             $('#appKey').removeClass('inputbox-disable');
             $appButton.addClass('button-primary').val("提交");
+        }
+    }
+
+
+    function saveDivStyle() {
+        var $ = jQuery;
+        var $divButton = $('#divButton');
+        var buttonName = $divButton.val();
+        if (buttonName == "提交") {
+            var divClass = $('#div_class').val();
+            var divStyle = $('#div_style').val();
+            var data = {
+                action: 'changyan_style',
+                div_class: divClass,
+                div_style: divStyle
+            };
+            $.post(
+                ajaxurl,
+                data,
+                function (response) {
+                    if (response.success == 'true') {
+                        alert("提交成功！");
+                    } else {
+                        alert("提交异常，请检查您的网络设置");
+                    }
+                }
+            );
+            $('#div_class').attr('disabled', true);
+            $('#div_class').addClass('inputbox-disable');
+            $('#div_style').attr('disabled', true);
+            $('#div_style').addClass('inputbox-disable');
+            $divButton.removeClass('button-primary').val("修改");
+        } else {
+            $('#div_class').attr('disabled', false);
+            $('#div_class').removeClass('inputbox-disable');
+            $('#div_style').attr('disabled', false);
+            $('#div_style').removeClass('inputbox-disable');
+            $divButton.addClass('button-primary').val("提交");
         }
     }
 </script>

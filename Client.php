@@ -44,7 +44,6 @@ class ChangYan_Client {
                 break;
 			default:
 		}
-		
 		$response = $this->http->request($url, $args);
 			
 		if (isset($response->errors)) {
