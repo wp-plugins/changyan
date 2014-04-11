@@ -3,7 +3,7 @@
 Plugin Name: 畅言评论系统
 Plugin URI: http://wordpress.org/plugins/changyan/
 Description: 即装即用，永久免费的社会化评论系统。为各类网站提供新浪微博、QQ、人人、搜狐等账号登录评论功能，同时提供强大的内容管理后台和智能云过滤服务。
-Version:  1.2
+Version:  1.3
 Author: 搜狐畅言
 Author URI: http://changyan.sohu.com
 */
@@ -100,7 +100,9 @@ function changyan_admin_init()
     add_action('wp_ajax_changyan_saveAppID', array($changyanPlugin, 'saveAppID'));
     add_action('wp_ajax_changyan_saveAppKey', array($changyanPlugin, 'saveAppKey'));
     add_action('wp_ajax_changyan_cron', array($changyanPlugin, 'setCron'));
-
+    add_action('wp_ajax_changyan_seo', array($changyanPlugin, 'setSeo'));
+    add_action('wp_ajax_changyan_quick_load', array($changyanPlugin, 'setQuick'));
+    add_action('wp_ajax_changyan_style', array($changyanPlugin, 'setChangYanStyle'));
     changyan_base_init();
 }
 
@@ -152,7 +154,7 @@ function changyan_add_menu_items()
                 '畅言评论',
                 'moderate_comments',
                 'changyan',
-                array($changyanPlugin, 'configure'),
+                array($changyanPlugin, 'audit'),
                 $changyanPlugin->PluginURL . 'logo.png'
             );
 
@@ -164,6 +166,16 @@ function changyan_add_menu_items()
                 'changyan_analysis',
                 array($changyanPlugin, 'analysis')
             );
+
+            add_submenu_page(
+                'changyan',
+                '畅言设置',
+                '畅言设置',
+                'manage_options',
+                'changyan_config',
+                array($changyanPlugin, 'config')
+           );
+
             add_submenu_page(
                 'changyan',
                 '高级选项',
@@ -210,7 +222,6 @@ if (is_admin()) {
 
 /*
    This may be used later, but not used now
-
 add_action('profile_update', 'cy_profile_update');
 function cy_profile_update($user_id, $older_user_data)
 {
