@@ -131,7 +131,7 @@ class Changyan_Synchronizer
         $client = new ChangYan_Client();
         $data = $client->httpRequest($url, 'GET', $params);
 		if (!empty($data->error_code)) {
-            $response = json_encode(array('success'=>'false', 'message'=>'咦，您的网络有点问题，请稍后再试'));
+            $response = json_encode(array('success'=>'false', 'message'=>'您的网络有点问题，请稍后再试'));
 			die($response);
 		}
 		$topic_id = $data['topic_id'];
@@ -371,7 +371,7 @@ class Changyan_Synchronizer
 				$user = array(
 						'userid' => $genUserId,
 						'nickname' => $comment->comment_author,
-						'usericon' => '',
+						'usericon' => $this->get_avatar_src($comment->comment_author_email),
 						'userurl' => $comment->comment_author_url
 				);
 				$comments[] = array(
@@ -435,7 +435,7 @@ class Changyan_Synchronizer
                             $response = json_encode(array('success'=>'false' , 'message'=>'请确认APP ID 和 APP Key 是否正确'));
                             die($response);
                         }
-                        $response = json_encode(array('success'=>'false' , 'message'=>'咦，您的网络有点问题，请稍后再试'));
+                        $response = json_encode(array('success'=>'false' , 'message'=>'您的网络有点问题，请稍后再试'));
                         die($response);
                }
         }
@@ -454,6 +454,15 @@ class Changyan_Synchronizer
 	{
 		return delete_option($option);
 	}
+    
+
+    private function get_avatar_src($user_mail) {
+        $img = get_avatar($user_mail, '48');
+        if(preg_match_all('/src=\'(.*)\'/iU', $img, $matches)) {
+        return $matches[1][0];
+        }
+        return '';
+    }
 
 	private function showAllComments()
 	{

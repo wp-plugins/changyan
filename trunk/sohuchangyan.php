@@ -3,12 +3,15 @@
 Plugin Name: 畅言评论系统
 Plugin URI: http://wordpress.org/plugins/changyan/
 Description: 即装即用，永久免费的社会化评论系统。为各类网站提供新浪微博、QQ、人人、搜狐等账号登录评论功能，同时提供强大的内容管理后台和智能云过滤服务。
-Version:  1.3
+Version:  1.4
 Author: 搜狐畅言
 Author URI: http://changyan.sohu.com
 */
 ini_set('max_execution_time', '0');
 define('CHANGYAN_PLUGIN_PATH', dirname(__FILE__));
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true); 
+define('WP_DEBUG_DISPLAY', false); 
 
 /* check PHP version */
 if (version_compare(PHP_VERSION, '5.0.0', '<')) {
@@ -41,7 +44,7 @@ function changyan_get_transport()
     }
     return false;
 }
-
+/*
 $transport = changyan_get_transport();
 if ($transport === false) {
     if (is_admin()) {
@@ -51,7 +54,7 @@ if ($transport === false) {
         }
         add_action('admin_notices', 'changyan_transport_notice');
     }
-}
+}*/
 
 /* in case of JSON not found */
 if (false === extension_loaded('json')) {
@@ -103,6 +106,8 @@ function changyan_admin_init()
     add_action('wp_ajax_changyan_seo', array($changyanPlugin, 'setSeo'));
     add_action('wp_ajax_changyan_quick_load', array($changyanPlugin, 'setQuick'));
     add_action('wp_ajax_changyan_style', array($changyanPlugin, 'setChangYanStyle'));
+    add_action('wp_ajax_changyan_reping', array($changyanPlugin, 'setChangYanReping')); // 热门评论
+    add_action('wp_ajax_changyan_hotnews', array($changyanPlugin, 'setChangYanHotnews')); // 热门新闻
     changyan_base_init();
 }
 

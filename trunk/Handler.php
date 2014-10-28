@@ -63,7 +63,7 @@ class Changyan_Handler
     public function showCommentsNotice()
     {
         echo '<div class="updated">'
-            . '请访问<a color = red href="http://changyan.sohu.com/manage" target="blank"><font color="red">畅言站长管理后台</font></a>进行评论管理，当前页面的管理操作不能被同步到畅言管理服务器。</p>'
+            . '请访问<a color = red href="http://changyan.sohu.com" target="blank"><font color="red">畅言站长管理后台</font></a>进行评论管理，当前页面的管理操作不能被同步到畅言管理服务器。</p>'
             . '</div>';
     }
 
@@ -205,7 +205,7 @@ class Changyan_Handler
         $div_defined = $this->getDivStyle($div_class, $div_style);
         $part1 = "";
         if (strcmp($div_defined, "<div ") == 0){
-            $part1 = "<div id=\"SOHUCS\"></div><script>(function(){var appid = '";
+            $part1 = "<div id=\"SOHUCS\" sid=\"\"></div><script>(function(){var appid = '";
         } else {
             $part1 = $div_defined . "<div id=\"SOHUCS\"></div></div><script>(function(){var appid = '";
         }
@@ -224,6 +224,28 @@ class Changyan_Handler
         $part4 = "})()</script>";
         $script = $part1 . $appId . $part2 . $conf . $part3 . $part4;
         $this->setOption('changyan_script', $script);
+        return true;
+    }
+
+    // 实验室: 热门评论JS
+    public function setRepingCode($appId)
+    {
+        $part1 = "<div id=\"cyReping\" role=\"cylabs\" data-use=\"reping\"></div>
+        <script type=\"text/javascript\" charset=\"utf-8\" src=\"http://changyan.itc.cn/js/??lib/jquery.js,changyan.labs.js?appid=";
+        $part2 = "\"></script>";
+        $repingScript = $part1 . $appId . $part2;
+        $this->setOption('changyan_reping_script', $repingScript);
+        return true;
+    }
+
+    // 实验室: 热门新闻JS
+    public function setHotnewsCode($appId)
+    {
+        $part1 = "<div id=\"cyHotnews\" role=\"cylabs\" data-use=\"hotnews\"></div>
+        <script type=\"text/javascript\" charset=\"utf-8\" src=\"http://changyan.itc.cn/js/??lib/jquery.js,changyan.labs.js?appid=";
+        $part2 = "\"></script>";
+        $repingScript = $part1 . $appId . $part2;
+        $this->setOption('changyan_hotnews_script', $repingScript);
         return true;
     }
 
@@ -340,6 +362,50 @@ class Changyan_Handler
         $response = ""; 
         if (!empty($flag) || $flag != false) {
             $response = json_encode(array('success'=>'true'));
+        } else {
+            $response = json_encode(array('success'=>'false'));
+        }
+        die($response);
+    }
+
+    // 开启热门评论
+    public function setChangYanReping() {
+        $appId = $this->getOption('changyan_appId');
+        $isChecked = $_POST['isReping'];
+        $isChecked = trim($isChecked);
+        $flag = 0;
+        if ('true' == $isChecked) {
+            $flag = $this->setOption('changyan_isReping', true);
+        } else {
+            $flag = $this->setOption('changyan_isReping', false);
+        }
+        header( "Content-Type: application/json" );
+        $response = ""; 
+        if (!empty($flag) || $flag != false) {
+            $response = json_encode(array('success'=>'true'));
+            $this->setRepingCode($appId);
+        } else {
+            $response = json_encode(array('success'=>'false'));
+        }
+        die($response);
+    }
+
+    // 开启热门新闻
+    public function setChangYanHotnews() {
+        $appId = $this->getOption('changyan_appId');
+        $isChecked = $_POST['isHotnews'];
+        $isChecked = trim($isChecked);
+        $flag = 0;
+        if ('true' == $isChecked) {
+            $flag = $this->setOption('changyan_isHotnews', true);
+        } else {
+            $flag = $this->setOption('changyan_isHotnews', false);
+        }
+        header( "Content-Type: application/json" );
+        $response = ""; 
+        if (!empty($flag) || $flag != false) {
+            $response = json_encode(array('success'=>'true'));
+            $this->setHotnewsCode($appId);
         } else {
             $response = json_encode(array('success'=>'false'));
         }
