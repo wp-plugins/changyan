@@ -4,7 +4,7 @@ Donate link: http://changyan.sohu.com/
 Tags: comments, spam, social, share, qzone, weibo,  youyan, duoshuo, pinglunla, widget, disqus，sohu，changyan，评论, 社会化, 分享, 微博, QQ, 腾讯, 新浪微博, 垃圾评论 
 Requires at least: 3.0
 Tested up to: 3.7.1
-Stable tag: 1.2
+Stable tag: 1.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
