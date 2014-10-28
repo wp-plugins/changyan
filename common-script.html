@@ -1,13 +1,18 @@
 <style>
-#cyan-WP2cyan{
-	margin-bottom:0em;
-}
-.message-complete, .cyan-exported .message-start, .cyan-exporting .message-start, .status{
-	display:none;
-}
-.cyan-export .message-complete, .message-start, .cyan-exporting .status{
-	display:block;
-}
+    #cyan-WP2cyan {
+        margin-bottom: 0em;
+    }
+    .message-complete,
+    .cyan-exported .message-start,
+    .cyan-exporting .message-start,
+    .status {
+        display: none;
+    }
+    .cyan-export .message-complete,
+    .message-start,
+    .cyan-exporting .status {
+        display: block;
+    }
 </style>
 <script type="text/javascript">
     function sync2WPress() {
@@ -17,27 +22,29 @@
         var image = "<?php echo plugin_dir_url(__FILE__) . 'progressBar.gif'; ?>";
         $('#cyan-export .status').html('正在同步 <img src="' + image + '" align="middle"/>');
         $.ajax({
-                url : ajaxurl,
-                dataType : 'json',
-                data : {
-                    'action': 'changyan_sync2WordPress'
-                },
-                timeout : 60000,
-                success : function (response) {
-                	if (response.success == 'true') {    
-                    	$('#cyan-export .message-complete').html('同步完成');
-			} else {
-			alert(response.message);
-                        $('#cyan-export .message-complete').html('同步失败');
-                        }
-	        },
-                error : function(XMLHttpRequest, error, status){
-                    alert("咦，您的网络有点问题，请稍后再试");
+            url: ajaxurl,
+            dataType: 'json',
+            data: {
+                'action': 'changyan_sync2WordPress'
+            },
+            timeout: 60000,
+            success: function(response) {
+                jsonData = JSON.parse(ResponseToJson(response));
+                if (jsonData.success == 'true') {
+                    $('#cyan-export .message-complete').html('同步完成');
+                } else {
+                    alert(jsonData.message);
                     $('#cyan-export .message-complete').html('同步失败');
-                },
-                complete : function(){
-                    $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
                 }
+            },
+            error: function(XMLHttpRequest, error, status) {
+                alert("咦，您的网络有点问题，请稍后再试");
+                $('#cyan-export .message-complete').html('同步失败');
+            },
+            complete: function() {
+                $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
+            },
+            dataType: "text"
         });
     }
 
@@ -53,34 +60,36 @@
         var image = "<?php echo plugin_dir_url(__FILE__) . 'progressBar.gif'; ?>";
         $('#cyan-WP2cyan .status').html('正在同步 <img src="' + image + '" align="middle"/>');
         $.ajax({
-                url : ajaxurl,
-                dataType : 'json', 
-                data : {
-                    'action': 'changyan_sync2Changyan'
-                },
-                timeout : 60000,
-                success : function (response) {
-                    if (response.success == 'true') {
-                        if ("T" == flag) {
-                            alert("同步成功，开始享受畅言带来的方便吧");
-                            window.location.reload();
-                        } else {
-                            $('#cyan-WP2cyan .message-complete').html('同步完成');
-                        }
+            url: ajaxurl,
+            dataType: 'json',
+            data: {
+                'action': 'changyan_sync2Changyan'
+            },
+            timeout: 60000,
+            success: function(response) {
+                jsonData = JSON.parse(ResponseToJson(response));
+                if (jsonData.success == 'true') {
+                    if ("T" == flag) {
+                        alert("同步成功，开始享受畅言带来的方便吧");
+                        window.location.reload();
                     } else {
-                        alert(response.message);
-                        $('#cyan-WP2cyan .message-complete').html('同步失败');
-		            }
-                },
-                error : function(XMLHttpRequest, error, status){
-                    alert("咦，您的网络有点问题，请稍后再试");
+                        $('#cyan-WP2cyan .message-complete').html('同步完成');
+                    }
+                } else {
+                    alert(jsonData.message);
                     $('#cyan-WP2cyan .message-complete').html('同步失败');
-                },
-                complete : function(){
-                    $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
                 }
+            },
+            error: function(XMLHttpRequest, error, status) {
+                alert("咦，您的网络有点问题，请稍后再试");
+                $('#cyan-WP2cyan .message-complete').html('同步失败');
+            },
+            complete: function() {
+                $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
+            },
+            dataType: "text"
         });
-    } 
+    }
 
     function saveAppID() {
         var $ = jQuery;
@@ -91,16 +100,17 @@
         var data = {
             action: 'changyan_saveAppID',
             appID: appID,
-            dataType:'json'
+            dataType: 'json'
         };
-        jQuery.post(ajaxurl, data, function (response) {
-            if (response.success == 'true') {
+        jQuery.post(ajaxurl, data, function(response) {
+            var jsonData = JSON.parse(ResponseToJson(response));
+            if (jsonData.success == 'true') {
                 $('#appID').val(appID);
-           } else {
+            } else {
                 alert('站点不存在，请检查AppID输入正确！');
                 return -1;
-           }
-        });
+            }
+        },"text");
         return 0;
     }
 
@@ -113,17 +123,18 @@
         var data = {
             action: 'changyan_saveAppKey',
             appKey: appKey,
-            dataType:'json'
+            dataType: 'json'
         };
-        $.post(ajaxurl, data, function (response) {
-            if (response.success == 'true') {
+        $.post(ajaxurl, data, function(response) {
+            var jsonData = JSON.parse(ResponseToJson(response));
+            if (jsonData.success == 'true') {
                 $('#appKey').val(appKey);
             }
-        });
+        },"text");
         return 0;
     }
 
-    jQuery('#changyanCron').click(function () {
+    jQuery('#changyanCron').click(function() {
         var $ = jQuery;
         var isChecked = !!($(this).attr('checked'));
         var data = {
@@ -131,18 +142,18 @@
             isChecked: isChecked
         };
         $.post(
-                ajaxurl,
-                data,
-                function (response) {
-                    if (response.success != 'true') {
-                        alert("自动同步配置提交异常，请检查您的网络设置");
-                    }
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success != 'true') {
+                    alert("自动同步配置提交异常，请检查您的网络设置");
                 }
+            }
         );
     });
-    
-    
-    jQuery('#changyanSeo').click(function () {
+
+
+    jQuery('#changyanSeo').click(function() {
         var $ = jQuery;
         var isSEOChecked = !!($(this).attr('checked'));
         var data = {
@@ -150,20 +161,20 @@
             isSEOChecked: isSEOChecked
         };
         $.post(
-                ajaxurl,
-                data,
-                function (response) {
-                    if (response.success == 'true') {
-                        
-                    } else {
-                        alert("提交异常，请检查您的网络设置");
-                    }
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+
+                } else {
+                    alert("提交异常，请检查您的网络设置");
                 }
+            }
         );
     });
 
 
-    jQuery('#changyanStyle').click(function () {
+    jQuery('#changyanStyle').click(function() {
         var $ = jQuery;
         var isQuick = !($(this).attr('checked'));
         var data = {
@@ -171,18 +182,59 @@
             isQuick: isQuick
         };
         $.post(
-                ajaxurl,
-                data,
-                function (response) {
-                    if (response.success == 'true') {
-                        
-                    } else {
-                        alert("提交异常，请检查您的网络设置");
-                    }
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+
+                } else {
+                    alert("提交异常，请检查您的网络设置");
                 }
+            }
         );
     });
 
+    // 实验室1: 开启热门评论
+    jQuery('#changyanReping').click(function() {
+        var $ = jQuery;
+        var isReping = !!($(this).attr('checked'));
+        var data = {
+            action: 'changyan_reping',
+            isReping: isReping
+        };
+        $.post(
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+
+                } else {
+                    alert("提交异常，请检查您的网络设置");
+                }
+            }
+        );
+    });
+
+    // 实验室2: 开启热门新闻
+    jQuery('#changyanHotnews').click(function() {
+        var $ = jQuery;
+        var isHotnews = !!($(this).attr('checked'));
+        var data = {
+            action: 'changyan_hotnews',
+            isHotnews: isHotnews
+        };
+        $.post(
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+
+                } else {
+                    alert("提交异常，请检查您的网络设置");
+                }
+            }
+        );
+    });
 
     function saveAppKey_AppID() {
         var $ = jQuery;
@@ -227,7 +279,7 @@
             $.post(
                 ajaxurl,
                 data,
-                function (response) {
+                function(response) {
                     if (response.success == 'true') {
                         alert("提交成功！");
                     } else {
@@ -247,5 +299,11 @@
             $('#div_style').removeClass('inputbox-disable');
             $divButton.addClass('button-primary').val("提交");
         }
+    }
+
+    function ResponseToJson(response) {
+        var pattern = /^changyan\w*\n/;
+        response = response.replace(pattern,'');
+        return response;
     }
 </script>

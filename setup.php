@@ -47,7 +47,7 @@ include_once dirname(__FILE__) . '/header.html';
             <td />
             <td>
                 <span class="high">请在<a
-                        href="http://changyan.sohu.com/manage"
+                        href="http://changyan.sohu.com"
                         target="blank">畅言站长管理后台</a>依次选择 “站点设置” - “通用设置” 获取APP ID和APP KEY并在下方提交。
                 </span>
             </td>
