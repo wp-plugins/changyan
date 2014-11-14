@@ -8,8 +8,8 @@ include_once dirname(__FILE__) . '/header.html';
 <div id="divMain" class="margin" style="width: 705px">
 	<iframe id="rightBar_1" name="rightBar_1" marginwidth="0"
 		allowtransparency="true"
-		src=<?php 
-            echo "http://changyan.sohu.com/setting/basic"; ?>
+        src=<?php 
+            echo "http://changyan.sohu.com/operation/recommender" ?>
 		frameborder="0" scrolling="yes" style="width:150%;border:0 none;float:left"></iframe>
 </div>
 

@@ -187,6 +187,7 @@ include_once dirname(__FILE__) . '/header.html';
                             </label>
                         </td>
                     </tr>
+
                  </table>
                  <h3>功能说明</h3>
                  <table>
