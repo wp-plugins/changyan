@@ -13,7 +13,6 @@ include_once dirname(__FILE__) . '/header.html';
 		frameborder="0" scrolling="yes" style="width:150%;border:0 none;float:left"></iframe>
 </div>
 
-
 <?php
 include_once dirname(__FILE__) . '/scripts.html';
 ?>

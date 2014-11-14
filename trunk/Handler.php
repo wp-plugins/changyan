@@ -131,6 +131,16 @@ class Changyan_Handler
 
         include dirname(__FILE__) . '/settings.php';
     }
+
+    public function operations()
+    {
+        //must check that the user has the required capability
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this page.'));
+        }
+
+        include dirname(__FILE__) . '/operations.php';
+    }
     //deprecated
     public function account()
     {
