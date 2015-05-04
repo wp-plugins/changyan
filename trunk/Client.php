@@ -25,7 +25,8 @@ class ChangYan_Client {
      * @return array
      */
 	
-	public function httpRequest($url, $method, $params) {
+    public function httpRequest($url, $method, $params) {
+        require_once 'Exception.php';
 		$args = array(
 			'method' => $method,
 			'timeout' => 600,

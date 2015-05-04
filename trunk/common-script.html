@@ -22,6 +22,7 @@
         var image = "<?php echo plugin_dir_url(__FILE__) . 'progressBar.gif'; ?>";
         $('#cyan-export .status').html('正在同步 <img src="' + image + '" align="middle"/>');
         $.ajax({
+            async: false,
             url: ajaxurl,
             dataType: 'json',
             data: {
@@ -60,6 +61,7 @@
         var image = "<?php echo plugin_dir_url(__FILE__) . 'progressBar.gif'; ?>";
         $('#cyan-WP2cyan .status').html('正在同步 <img src="' + image + '" align="middle"/>');
         $.ajax({
+            async: false,
             url: ajaxurl,
             dataType: 'json',
             data: {
@@ -117,8 +119,8 @@
     function saveAppKey() {
         var $ = jQuery;
         var appKey = $('#appKey').val();
-        if (appKey.length != 32) {
-            return -1;
+        if (appKey.length != 37) {
+            //return -1;
         }
         var data = {
             action: 'changyan_saveAppKey',

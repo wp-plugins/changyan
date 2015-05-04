@@ -4,7 +4,7 @@ Donate link: http://changyan.sohu.com/
 Tags: comments, spam, social, share, qzone, weibo,  youyan, duoshuo, pinglunla, widget, disqus，sohu，changyan，评论, 社会化, 分享, 微博, QQ, 腾讯, 新浪微博, 垃圾评论 
 Requires at least: 3.0
 Tested up to: 3.7.1
-Stable tag: 1.5
+Stable tag: 1.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -133,6 +133,7 @@ VIP账号，拥有分频道管理与统计分析、管理员体系设置、一�
 * [增加]增加评论SEO功能，使得畅言的评论能够被抓取
 * [增加]增加了div样式自定义的功能，能够在畅言评论的基础上自定义样式
 * [增加]畅言评论框设置页面嵌入管理后台
+* [增加]获取文章的topicId来作为畅言的sourceId
 * [修改]修改了多站点情况下不能管理当前站点评论的问题
 * [修改]修改评论框的标签使得wp中点击文章评论链接能跳转到相应位置
 
@@ -142,10 +143,8 @@ VIP账号，拥有分频道管理与统计分析、管理员体系设置、一�
 = 1.5 =
 * [增加]后台管理增加了"智能运营"的功能, 包括"评论联通", "评论灌水", "用户等级"
 
-== Upgrade Notice ==
-
-= 1.3 =
-畅言在与其他评论插件同时开启时可能会产生异常，请在使用前关闭其他评论插件。
+= 1.6 =
+* Bugfix
 
 == DEMO ==
 
