@@ -28,7 +28,7 @@ include_once dirname(__FILE__) . '/header.html';
             <td />
             <td>
                 <span class="high">请按照提示<a
-                        href="http://changyan.sohu.com/register" target="blank">注册</a>账号。
+                        href="http://changyan.kuaizhan.com/" target="blank">注册</a>账号。
                 </span>
             </td>
         </tr>
@@ -47,7 +47,7 @@ include_once dirname(__FILE__) . '/header.html';
             <td />
             <td>
                 <span class="high">请在<a
-                        href="http://changyan.sohu.com"
+                        href="http://changyan.kuaizhan.com"
                         target="blank">畅言站长管理后台</a>依次选择 “站点设置” - “通用设置” 获取APP ID和APP KEY并在下方提交。
                 </span>
             </td>
