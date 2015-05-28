@@ -15,37 +15,41 @@
     }
 </style>
 <script type="text/javascript">
-    function sync2WPress() {
+    function sync2WPress(flag) {
         var $ = jQuery;
         $('#cyan-export .status').empty();
         $('#cyan-export').addClass('cyan-exporting');
         var image = "<?php echo plugin_dir_url(__FILE__) . 'progressBar.gif'; ?>";
         $('#cyan-export .status').html('正在同步 <img src="' + image + '" align="middle"/>');
         $.ajax({
-            async: false,
             url: ajaxurl,
-            dataType: 'json',
+            dataType: 'text',
             data: {
-                'action': 'changyan_sync2WordPress'
+                'action': flag=='syncing'?'changyan_getSyncProgress':'changyan_sync2WordPress'
             },
-            timeout: 60000,
+            timeout: 5000,
             success: function(response) {
-                jsonData = JSON.parse(ResponseToJson(response));
-                if (jsonData.success == 'true') {
-                    $('#cyan-export .message-complete').html('同步完成');
+                jsonData = JSON.parse(response);
+                if (jsonData.success == true) {
+                    $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
+                    $('#cyan-export .message-complete').html('同步完成,共'+jsonData.total_topics+'篇文章');
+                } else if (jsonData.success == 'syncing') {
+                    sync2WPress('syncing');
                 } else {
-                    alert(jsonData.message);
+                    $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
+                    $('#cyan-export .message-complete').html('同步失败'+jsonData.message);
+                } 
+            },
+            error: function(XMLHttpRequest, error, status) {
+                if(error === 'timeout') {
+                    sync2WPress('syncing');
+                } else {
+                    $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
                     $('#cyan-export .message-complete').html('同步失败');
                 }
             },
-            error: function(XMLHttpRequest, error, status) {
-                alert("咦，您的网络有点问题，请稍后再试");
-                $('#cyan-export .message-complete').html('同步失败');
-            },
             complete: function() {
-                $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
-            },
-            dataType: "text"
+            }
         });
     }
 
@@ -53,46 +57,40 @@
         var $ = jQuery;
         $('#cyan-WP2cyan .status').empty();
         $('#cyan-WP2cyan').addClass('cyan-exporting');
-        if (($('#appID').val().length != 9) || ($('#appKey').val().length != 32)) {
-            alert("请输入正确的APP ID和APP KEY");
-            window.location.reload();
-            return;
-        }
         var image = "<?php echo plugin_dir_url(__FILE__) . 'progressBar.gif'; ?>";
         $('#cyan-WP2cyan .status').html('正在同步 <img src="' + image + '" align="middle"/>');
         $.ajax({
-            async: false,
             url: ajaxurl,
-            dataType: 'json',
+            dataType: 'text',
             data: {
-                'action': 'changyan_sync2Changyan'
+                'action': flag=='syncing'?'changyan_getSyncProgress':'changyan_sync2Changyan'
             },
-            timeout: 60000,
+            timeout: 5000,
             success: function(response) {
                 jsonData = JSON.parse(ResponseToJson(response));
-                if (jsonData.success == 'true') {
-                    if ("T" == flag) {
-                        alert("同步成功，开始享受畅言带来的方便吧");
-                        window.location.reload();
-                    } else {
-                        $('#cyan-WP2cyan .message-complete').html('同步完成');
-                    }
+                if (jsonData.success == true) {
+                    $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
+                    $('#cyan-WP2cyan .message-complete').html('同步完成,共'+jsonData.total_topics+'篇文章');
+                } else if (jsonData.success == 'syncing'){
+                    sync2Cyan('syncing');
                 } else {
-                    alert(jsonData.message);
-                    $('#cyan-WP2cyan .message-complete').html('同步失败');
+                    $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
+                    $('#cyan-WP2cyan .message-complete').html('同步失败'+jsonData.message);
                 }
             },
             error: function(XMLHttpRequest, error, status) {
-                alert("咦，您的网络有点问题，请稍后再试");
-                $('#cyan-WP2cyan .message-complete').html('同步失败');
+                if(error === 'timeout') {
+                    sync2Cyan('syncing');
+                } else {
+                    $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
+                    $('#cyan-WP2cyan .message-complete').html('同步失败');
+                }
             },
             complete: function() {
-                $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
-            },
-            dataType: "text"
+            }
         });
     }
-
+    
     function saveAppID() {
         var $ = jQuery;
         var appID = $('#appID').val();
@@ -238,6 +236,46 @@
         );
     });
 
+    // 开启debug
+    jQuery('#changyanDebug').click(function() {
+        var $ = jQuery;
+        var isDebug = !!($(this).attr('checked'));
+        var data = {
+            action: 'changyan_debug',
+            isDebug: isDebug
+        };
+        $.post(
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+
+                } else {
+                    alert("提交异常，请检查您的网络设置");
+                }
+            }
+        );
+    });
+    // 使用iframe版代码
+    jQuery('#changyanIframeJs').click(function() {
+        var $ = jQuery;
+        var isIframeJs = !!($(this).attr('checked'));
+        var data = {
+            action: 'changyan_iframejs',
+            isIframeJs: isIframeJs
+        };
+        $.post(
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+
+                } else {
+                    alert("提交异常，请检查您的网络设置");
+                }
+            }
+        );
+    });
     function saveAppKey_AppID() {
         var $ = jQuery;
         var $appButton = $('#appButton');
@@ -264,7 +302,6 @@
             $appButton.addClass('button-primary').val("提交");
         }
     }
-
 
     function saveDivStyle() {
         var $ = jQuery;
