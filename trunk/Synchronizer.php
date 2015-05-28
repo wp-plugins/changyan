@@ -3,11 +3,18 @@ ini_set('max_execution_time', '0');
 class Changyan_Synchronizer
 {
     private static $instance = null;
+    private $syncCounter = null;
+    private $debug = false;
     private $PluginURL = 'changyan';
-
+    private $total_topics_count = 0;
+    private $sync_topics_count = 0;
+    private $total_comments_count = 0;
+    private $sync_comments_count = 0;
+    
     private function __construct()
     {
         $this->PluginURL = plugin_dir_url(__FILE__);
+        $this->debug = get_option('changyan_isDebug');
     }
 
     private function __clone()
@@ -30,19 +37,19 @@ class Changyan_Synchronizer
         return date('Y-m-d H:i:s', $time);
     }
 
-    /* Synchronize comments in changyan to WordPress */
+    /* Synchronize comments in changyan to WordPress 
+     * return: json
+     * */
     public function sync2Wordpress()
     {
-        header( "Content-Type: application/json" ); 
         global $wpdb;
         @set_time_limit(0);
         @ini_set('memory_limit', '256M');
         @date_default_timezone_set('PRC');
 
-        $script = $this->getOption('changyan_script');
+        $this->setSyncProgress('start');
+        $this->outputTrace2Html("sync2WPress Start",true);
         $appId = $this->getOption('changyan_appId');
-        $response = json_encode(array('success'=>'true', 'message'=>'null'));
-
         $nextID2CY = $this->getOption('changyan_sync2CY');
         $nextID2WP = $this->getOption('changyan_sync2WP');
         if (empty($nextID2CY)) {
@@ -55,7 +62,6 @@ class Changyan_Synchronizer
         if ($nextID2CY > $nextID2WP) {
             $nextID2WP = $nextID2CY;
         }
-
         $time = $wpdb->get_results(
             "SELECT MAX(comment_date) AS time FROM $wpdb->comments WHERE comment_agent LIKE '%%changyan%%'"
         );
@@ -70,6 +76,7 @@ class Changyan_Synchronizer
                 $time = $time[0]->time;
             }
         }
+
         $params = array(
             'appId' => $appId,
             'date' => $time
@@ -78,18 +85,23 @@ class Changyan_Synchronizer
         $client = new ChangYan_Client();
         $data = $client->httpRequest($url, 'GET', $params);
 
-        if ($data['success'] === false) {
-            $response = json_encode(array('success'=>'false','message'=>'站点不存在'));
-            die($response);
+        if ($data['success'] != true) {
+            $this->setSyncProgress('failed',false);
+            $this->outputTrace2Html(sprintf("get recent topics error, appid=%s, data=%s",$appId,$time));
+            return json_encode(array('success'=>false, 'message'=>($data['msg']==null?'':$data['msg'])));
         }
         $newTopics = $data['topics'];
+        $this->outputTrace2Html(sprintf("get recent topics, sum=%d, appid=%s, data=%s",count($data['topics']),$appId,$time));
+
         $allTopics = $wpdb->get_results(
             "SELECT ID AS ID, post_title AS title
             FROM $wpdb->posts
             WHERE post_type NOT IN ('attachment', 'nav_menu_item', 'revision')
             AND post_status NOT IN ('future', 'auto-draft', 'draft', 'trash', 'inherit')
             ORDER BY ID DESC"
-        );
+        ); 
+
+        $this->outputTrace2Html(sprintf("preparing topic to sync, all topics=%d, all posts=%d",count($newTopics),count($allTopics))); 
         $postArray = array();
         foreach ($newTopics as $topic) {
             foreach ($allTopics as $localTopic) {
@@ -102,21 +114,38 @@ class Changyan_Synchronizer
                     break;
                 }
             }
-        }
+        }  
+        
+        $this->total_topics_count = count($postArray);
         $lastCommentID = $this->getOption('changyan_sync2WP');
         if (empty($lastCommentID)) {
             $lastCommentID = 0;
         }
+        $this->setSyncProgress('syncing');
+        $this->outputTrace2Html(sprintf("posts to sync: sum=%d, last_cid=%d",count($postArray),$lastCommentID));
         foreach ($postArray as $commentedTopic) {
             $cyanCommentList = $this->getCommentListFromChangYan($appId, $commentedTopic);
+            if($cyanCommentList == null) {
+                continue;
+            }
             $commentID = $this->insertComments($cyanCommentList, $commentedTopic['ID'], $time);
+            $this->sync_topics_count += 1;
+            $this->outputTrace2Html(sprintf("insert cmts, post_id=%d, cid=%d",$commentedTopic['ID'],$commentID));
             if ($commentID > $lastCommentID) {
                 $lastCommentID = $commentID;
             }
         }
         $this->setOption('changyan_lastSyncTime', date("Y-m-d G:i:s", time() + get_option('gmt_offset') * 3600));
         $this->setOption('changyan_sync2WP', $lastCommentID);
-        die($response);
+        $this->setSyncProgress('success',true);
+        $this->outputTrace2Html(sprintf("sync2WPress End, last_cid=%d",$lastCommentID));
+        $result = array(
+                'total_topics' => $this->total_topics_count,
+                'sync_topics' => $this->sync_topics_count,
+                'total_comments' => $this->total_comments_count,
+                'sync_comments' => $this->sync_comments_count,
+                'success' => true);
+        return json_encode($result);
     }
 
     private function getCommentListFromChangYan($appId, $article)
@@ -127,20 +156,22 @@ class Changyan_Synchronizer
             'topic_title' => $article['post_title'],
             'style' => 'terrace'
         );
-        $url = 'https://changyan.sohu.com/api/open/topic/load';
+        $url = 'http://changyan.sohu.com/api/open/topic/load';
         $client = new ChangYan_Client();
         $data = $client->httpRequest($url, 'GET', $params);
         if (!empty($data->error_code)) {
-            $response = json_encode(array('success'=>'false', 'message'=>'您的网络有点问题，请稍后再试'));
-            die($response);
+            $this->outputTrace2Html(sprintf("get topic detail err, pid=%s, err=%d",$article['ID'],$data->error_code));
+            return null;
         }
         $topic_id = $data['topic_id'];
         $page_no = 1;
         $page_sum = 1;
+        $err_time = 0;
         $commentPageArray = array();
         $url = 'http://changyan.sohu.com/api/2/topic/comments';
         while ($page_no <= $page_sum) {
             unset($params);
+            unset($data);
             $params = array(
                 'client_id' => $appId,
                 'topic_id' => $topic_id,
@@ -148,12 +179,19 @@ class Changyan_Synchronizer
             );
             $data = $client->httpRequest($url, 'GET', $params);
             if (!empty($data->error_code)) {
-                $response = json_encode(array('success'=>'false', 'message'=>'您的网络有点问题，请稍后再试'));
-                die($response);
+                if($err_time++ > 3) {
+                    $page_no++;
+                    $err_time = 0;
+                    $this->outputTrace2Html(sprintf("get cmt err, tid=%d, page=%d",$topic_id,$page_no));
+                }
+                continue;
             }
             $page_sum = intval(($data['cmt_sum']) / 30) + 1;
             $commentPageArray[] = $data;
+            $this->sync_comments_count += $data['cmt_cnt'];
+            //$this->outputTrace2Html(sprintf("get cmts, tid=%d, page=%d, cmts=%d",$topic_id,$page_no,count($data['comments'])));
             $page_no += 1;
+            $err_time = 0;
         }
         return $commentPageArray;
     }
@@ -288,17 +326,21 @@ class Changyan_Synchronizer
         }
     }
 
-    /* export comment in local database to Synchronize to Changyan */
+    /* export comment in local database to Synchronize to Changyan 
+     * return: json
+     * */
     public function sync2Changyan($isSetup = false)
     {
-        header( "Content-Type: application/json" );
         global $wpdb;
         @set_time_limit(0);
         @ini_set('memory_limit', '256M');
         @date_default_timezone_set('PRC');
-        $nextID2CY = $this->getOption('changyan_sync2CY');
         $flag = true;
         $errorMessage = '';
+        
+        $this->setSyncProgress('start');
+        $this->outputTrace2Html("sync2Changyan Start",true);
+        $nextID2CY = $this->getOption('changyan_sync2CY');
         if (empty($nextID2CY)) {
             $nextID2CY = 1;
         }
@@ -307,8 +349,9 @@ class Changyan_Synchronizer
             WHERE comment_agent NOT LIKE '%%changyan%%'"
         );
         if($maxID == null) {
-            $response = json_encode(array('success'=>'false', 'message'=>'find max failed'));
-            die($response);
+            $this->setSyncProgress('failed',false);
+            $this->outputTrace2Html('get maxID error');
+            return json_encode(array('success'=>false, 'message'=>'get maxID error'));
         }
         $maxID = $maxID[0]->maxID;
         $postIDList = $wpdb->get_results($wpdb->prepare(
@@ -319,14 +362,14 @@ class Changyan_Synchronizer
             $nextID2CY,
             $maxID
         ));
-        $wp_post_total = count($postIDList);
+        $this->total_topics_count = count($postIDList);
         $maxPostID = $wpdb->get_results("SELECT MAX(ID) AS maxPostID FROM $wpdb->posts"); 
         $maxPostID = $maxPostID[0]->maxPostID;
         $client = new ChangYan_Client();
-        $wp_post_sync_ok = 0;
-        $wp_post_sync_err = 0;
-        $wp_cmt_sync_ok = 0;
-        $wp_cmt_sync_err = 0;
+
+        $this->setSyncProgress('syncing');
+        $this->outputTrace2Html(sprintf("prepare post to sync, sum=%d, maxPostID=%d, maxCommentID=%d, nextID2CY",count($postIDList),$maxPostID,$maxID,$nextID2CY));
+
         foreach ($postIDList as $postId) {
             if ($postId->comment_post_ID > $maxPostID) {
                 continue;
@@ -344,6 +387,7 @@ class Changyan_Synchronizer
                     $postId->comment_post_ID
                 )
             );
+            //$this->outputTrace2Html(sprintf("wp-post[%d] , postInfo: %s",$postId->comment_post_ID,print_r($postInfo,true)));
             /* select  the articles' comments to be synchronized */
             $topic_url = get_permalink($postInfo[0]->post_ID);
             $topic_title = $postInfo[0]->post_title;
@@ -363,6 +407,8 @@ class Changyan_Synchronizer
                     $maxID
                 )
             );
+            $this->outputTrace2Html(sprintf("get cmts list, post_id=%d, cmt_sum=%d",$postId->comment_post_ID, count($commentsList)));
+
             $comments = array();
             foreach ($commentsList as $comment) {
                 $genUserId = $comment->comment_author_email."#".$comment->comment_author;
@@ -388,7 +434,7 @@ class Changyan_Synchronizer
             }
 
             if (empty($comments)) {
-                $wp_post_sync_ok++;
+                $this->sync_topics_count += 1;
                 continue;
             }
             /* comments under a post to be synchronized */
@@ -402,7 +448,8 @@ class Changyan_Synchronizer
                 'ownerid' => '',
                 'metadata' => '',
                 'comments' => $comments
-            );
+            ); 
+
             $appId = $this->getOption('changyan_appId');
             $postComments = json_encode($postComments);
             $appKey = $this->getOption('changyan_appKey');
@@ -411,18 +458,17 @@ class Changyan_Synchronizer
             $url = 'http://changyan.sohu.com/admin/api/import/comment';
             $postData = "appid=" . $appId . "&md5=" . $md5 . "&jsondata=" . $postComments;
             $resp = $client->httpRequest($url, 'POST', $postData);
+            $this->outputTrace2Html(sprintf("sync cmts, postData=%s, resp=%s", $postData, print_r($resp,true)));
             $resp = json_encode($resp);
             $regex = '/"success":true/';
             if (!preg_match($regex, $resp)) {
-                $wp_post_sync_err++;
-                $wp_cmt_sync_err += count($comments);
                 $errorMessage = $resp['message'];
                 $flag = false;
                 $maxID = find_min_by_post($comments);
                 break;
             } else {
-                $wp_post_sync_ok++;
-                $wp_cmt_sync_ok += count($comments);
+                $this->sync_topics_count += 1;
+                $this->sync_comments_count += count($comments);
                 $wpdb->get_results(
                     $wpdb->prepare(
                         "UPDATE $wpdb->comments SET comment_agent = 'changyan_sync' 
@@ -436,14 +482,16 @@ class Changyan_Synchronizer
         }
         /* update the latest synchronization time */
         $this->setOption('changyan_lastSyncTime', date("Y-m-d G:i:s", time() + get_option('gmt_offset') * 3600));
-        $this->setOption('changyan_sync2CY', $maxID);
-        $response = json_encode(array('success' => $flag, 
-                                    'post_sync_total' => $wp_post_total, 
-                                    'post_sync_err' => $wp_post_sync_err,
-                                    'cmt_sync_ok' => $wp_cmt_sync_ok,
-                                    'cmt_sync_err' => $wp_cmt_sync_err,
-                                    'message' => null));
-        die($response);
+        $this->setOption('changyan_sync2CY', $maxID);        
+        $this->setSyncProgress('success',true);
+        $this->outputTrace2Html(sprintf("sync2Changyan End, sync2CY=%d",$maxID));
+        $result = array(
+                'total_topics' => $this->total_topics_count,
+                'sync_topics' => $this->sync_topics_count,
+                'total_comments' => $this->total_comments_count,
+                'sync_comments' => $this->sync_comments_count,
+                'success' => true);
+        return json_encode($result);
     }
 
     private function getOption($option)
@@ -492,6 +540,87 @@ class Changyan_Synchronizer
                 echo $v . ";  ";
             }
             echo "<br/>";
+        }
+    }
+
+    /*
+     * if isset($progress['result']) mean sync finish
+     * */
+    public function getSyncProgress() {
+        session_start();
+        $progress = $_SESSION['sync_progress'];
+        //$this->outputTrace2Html(sprintf("get progress: %s",print_r($progress,true)));
+        return json_encode($progress);
+    }
+
+    /*
+     * set sync progress to sessions
+     * param: $result: true = sync success, false = error occurs, null = syncing
+     * usage: setSyncProgress()
+     * */
+    private function setSyncProgress($msg, $success=null) {
+        $progress = array(
+                'total_topics' => $this->total_topics_count,
+                'sync_topics' => $this->sync_topics_count,
+                'total_comments' => $this->total_comments_count,
+                'sync_comments' => $this->sync_comments_count,
+                'msg' => is_array($msg)? json_encode($msg): $msg);
+        if($success != null) {
+            $progress['success'] = $success;
+        } else {
+            $progress['success'] = 'syncing';
+        }
+        $this->outputTrace2Html(sprintf("set progress: %s",print_r($progress,true)));
+        session_start();
+        $_SESSION['sync_progress'] = $progress;
+        session_write_close();
+    }
+
+    private function exitJsonResoponse($data) {
+        @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+        echo json_encode($data);
+        die;
+    }
+
+    /*
+     * usage:  outputTrace2File("var=".print_r($val,ture))
+     */
+    private function outputTrace2File($msg) {
+        if(!$this->debug) return;
+        $backtrace = debug_backtrace();
+        $lasttrace = $backtrace[0];
+        $file = $lasttrace ['file'];
+        $line = $lasttrace['line'];
+        $time = date('Y-m-d h-i-s', time());
+        $os = (DIRECTORY_SEPARATOR=='\\')?"windows":'linux';
+        if($os == 'windows') {
+            $debug_file = 'c:\tmp\cy' . date("Y-m-d") . '.log';
+        } else if($os == 'linux') {
+            $debug_file = '/tmp/cy' . date("Y-m-d") . '.log';
+        }
+        file_put_contents($debug_file,"$file:$line:$time: $msg\n\n",FILE_APPEND);
+    }
+
+    /*
+     * http://127.0.0.1/wordpress/wp-content/plugins/changyan/debug.html
+     * */
+    private function outputTrace2Html($msg,$new=false){
+        if(!$this->debug) return;
+        $backtrace = debug_backtrace();
+        $lasttrace = $backtrace[0];
+        $file = $lasttrace ['file'];
+        $line = $lasttrace['line'];
+        $time = date('Y-m-d h-i-s', time());
+        $os = (DIRECTORY_SEPARATOR=='\\')?"windows":'linux';
+        if($os == 'windows') {
+            $debug_html = dirname(__FILE__).'\\'.'debug.html';
+        } else if($os == 'linux') {
+            $debug_html = dirname(__FILE__).'//'.'debug.html';
+        }
+        if($new == true) {
+            file_put_contents($debug_html,"$file:$line:$time: $msg<br><br>");
+        } else {
+            file_put_contents($debug_html,"$file:$line:$time: $msg<br><br>",FILE_APPEND);
         }
     }
 }

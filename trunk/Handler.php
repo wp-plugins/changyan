@@ -151,9 +151,16 @@ class Changyan_Handler
         include dirname(__FILE__) . '/account.php';
     }
 
-    public function sync2Wordpress()
+    public function getSyncProgress() 
     {
-        header( "Content-Type: application/json" );
+        @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+        $response = $this->changyanSynchronizer->getSyncProgress();
+        echo $response;
+        die();
+    }
+    public function sync2Wordpress()
+    {        
+        @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
         $response = $this->changyanSynchronizer->sync2Wordpress();
         echo $response;
         die();
@@ -161,7 +168,7 @@ class Changyan_Handler
 
     public function sync2Changyan()
     {
-        header( "Content-Type: application/json" );
+        @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
         $response = $this->changyanSynchronizer->sync2Changyan();
         echo $response;
         die();
@@ -251,6 +258,22 @@ class Changyan_Handler
         }</script>";
 
         $script = $part1 . $appId . $part2 . $conf . $part3 . $appId . $part4 . $conf . $part5;
+        $this->setOption('changyan_script', $script);
+        return true;
+    }
+
+    public function setCode2($appId, $conf)
+    {
+        $part1 = 
+            '<div id="SOHUCS"> sid=""></div>
+            <script charset="utf-8" type="text/javascript" src="http://assets.changyan.sohu.com/upload/changyan.js" ></script>
+            <script type="text/javascript">
+            window.changyan.api.config({
+            appid: \'';
+        $part2 = '\',conf: \'';
+        $part3 = '\'});</script>';
+            
+        $script = $part1.$appId.$part2.$conf.$part3;
         $this->setOption('changyan_script', $script);
         return true;
     }
@@ -448,6 +471,51 @@ class Changyan_Handler
         }
         die($response);
     }
+    public function setChangYanIframeJs() {
+        $isChecked = $_POST['isIframeJs'];
+        $isChecked = trim($isChecked);
+        $appId = $this->getOption('changyan_appId');
+        $params = array(
+            'app_id' => $appId
+        );
+        $client = new ChangYan_Client();
+        $url = 'http://changyan.sohu.com/getConf';
+        $conf = $client->httpRequest($url, 'GET', $params);
+        header("Content-Type: application/json");
+        if ($conf == '站点不存在') {
+            $response = json_encode(array('success'=>'false'));
+            die($response);
+        } 
+        if ('true' == $isChecked) {
+            $flag = $this->setCode2($appId, $conf);
+        } else {
+            $flag = $this->setCode($appId, $conf);
+        }
+        $response = "";
+        if (!empty($flag) || $flag != false) {
+            $response = json_encode(array('success'=>'true'));
+        } else {
+            $response = json_encode(array('success'=>'false'));
+        }
+        die($response);
+    }
+    public function setChangYanDebug() {
+        $isChecked = $_POST['isDebug'];
+        $isChecked = trim($isChecked);
+        if ('true' == $isChecked) {
+            $flag = $this->setOption('changyan_isDebug', true);
+        } else {
+            $flag = $this->setOption('changyan_isDebug', false);
+        }
+        header( "Content-Type: application/json" );
+        $response = "";
+        if (!empty($flag) || $flag != false) {
+            $response = json_encode(array('success'=>'true'));
+        } else {
+            $response = json_encode(array('success'=>'false'));
+        }
+        die($response);
+    }
 
     //crontab of sync
     public function cronSync()
@@ -455,7 +523,6 @@ class Changyan_Handler
         $response = $this->sync2Wordpress();
         die($response);
     }
-
 
     public function getIsvIdByAppId()
     {

@@ -3,7 +3,7 @@
 Plugin Name: 畅言评论系统
 Plugin URI: http://wordpress.org/plugins/changyan/
 Description: 即装即用，永久免费的社会化评论系统。为各类网站提供新浪微博、QQ、人人、搜狐等账号登录评论功能，同时提供强大的内容管理后台和智能云过滤服务。
-Version:  1.6
+Version:  1.7
 Author: 搜狐畅言
 Author URI: http://changyan.sohu.com
  */
@@ -86,6 +86,7 @@ function changyan_admin_init()
 
     add_action('admin_head-edit-comments.php', array($changyanPlugin, 'showCommentsNotice'));
     /* use ajax on wordpress */
+    add_action('wp_ajax_changyan_getSyncProgress', array($changyanPlugin, 'getSyncProgress'));
     add_action('wp_ajax_changyan_sync2WordPress', array($changyanPlugin, 'sync2Wordpress'));
     add_action('wp_ajax_changyan_sync2Changyan', array($changyanPlugin, 'sync2Changyan'));
     add_action('wp_ajax_changyan_saveScript', array($changyanPlugin, 'saveScript'));
@@ -97,6 +98,8 @@ function changyan_admin_init()
     add_action('wp_ajax_changyan_style', array($changyanPlugin, 'setChangYanStyle'));
     add_action('wp_ajax_changyan_reping', array($changyanPlugin, 'setChangYanReping')); // 热门评论
     add_action('wp_ajax_changyan_hotnews', array($changyanPlugin, 'setChangYanHotnews')); // 热门新闻
+    add_action('wp_ajax_changyan_debug', array($changyanPlugin, 'setChangYanDebug')); // 开启调试
+    add_action('wp_ajax_changyan_iframejs', array($changyanPlugin, 'setChangYanIframeJs')); // 开启iframe版本js
     add_action('changyanCron', array($changyanPlugin, 'cronSync'));
     changyan_base_init();
 }
