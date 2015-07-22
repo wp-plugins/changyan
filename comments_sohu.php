@@ -6,8 +6,8 @@ $changyanPlugin = Changyan_Handler::getInstance();
 <?php
 //Get comment template from option
 $changyan_script = $changyanPlugin->getOption('changyan_script');
-$changyan_reping_script = $changyanPlugin->getOption('changyan_reping_script', $repingScript);
-$changyan_hotnews_script = $changyanPlugin->getOption('changyan_hotnews_script', $repingScript);
+$changyan_reping_script = $changyanPlugin->getOption('changyan_reping_script');
+$changyan_hotnews_script = $changyanPlugin->getOption('changyan_hotnews_script');
 
 // Lab: Hot news & Hot Reply
 if ($changyanPlugin->getOption('changyan_isReping') == true){

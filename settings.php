@@ -1,10 +1,16 @@
-<link rel="stylesheet" href="<?php echo $this->pluginDirUrl; ?>styles.css" type="text/css" />
-<?php screen_icon();
+<?php
 ini_set('max_execution_time', '0');
 require_once CHANGYAN_PLUGIN_PATH . '/Handler.php';
 $changyanPlugin = Changyan_Handler::getInstance();
 include_once dirname(__FILE__) . '/header.html';
+
+$username = $changyanPlugin->getOption('changyan_username');
+$appID = $changyanPlugin->getOption('changyan_appId');
+$login = $changyanPlugin->getLogin();
+
 ?>
+<iframe src="<?php echo "http://s.changyan.kuaizhan.com/extension/login?". $login ;?>" width="0" height="0"></iframe>
+
 <div class="margin heiti" style="width: 800px">
     <br /><br />
     <table>
@@ -21,42 +27,21 @@ include_once dirname(__FILE__) . '/header.html';
             <td>
                 <table>
                     <tr>
-                        <td>APP ID:</td>
-                    </tr>
-                    <tr>
+                        <td> 登录用户:</td>
                         <td>
-                            <input type="text" id="appID"
-                                   class="inputbox inputbox-disable"
-                                   disabled="disabled"
-                                   value="<?php
-                                       $appId = $changyanPlugin->getOption('changyan_appId');
-                                       echo $appId;
-                                   ?>" />
+                            <input style="text-align:left;" type="text" id="username" class="inputbox inputbox-disable" disabled="disabled" value="<?php echo $username; ?>"
+                        </td>
+                        <td>
+                            <input type="button" id="appButton" class="button button-rounded" value="退出" onclick="changyanLogout();return false;" style="width: 100px; text-align: center; vertical-align: middle" />
                         </td>
                     </tr>
                     <tr>
-                        <td>APP KEY:</td>
-                    </tr>
-                    <tr>
+                        <td> App ID:</td>
                         <td>
-                            <input type="text" id="appKey"
-                                   class="inputbox inputbox-disable"
-                                   disabled="disabled"
-                                   value="<?php
-                                       $appKey = $changyanPlugin->getOption('changyan_appKey');
-                                       echo $appKey;
-                                   ?>">
+                            <input style="text-align:left;" type="text" id="appid" class="inputbox inputbox-disable" disabled="disabled" value="<?php echo $appID; ?>"
                         </td>
-                    </tr>
-
-                    <tr>
-                        <td style="text-align: left;">
-                            <p class="message-start">
-                            <input type="button" id="appButton"
-                                   class="button button-rounded" value="修改"
-                                   onclick="saveAppKey_AppID();return false;"
-                                   style="width: 100px; text-align: center; vertical-align: middle" />
-                             </p>
+                        <td>
+                            <!-- <input type="button" id="appButton" class="button button-rounded" value="切换" onclick="changeISV();return false;" style="width: 100px; text-align: center; vertical-align: middle" /> -->
                         </td>
                     </tr>
                 </table>
@@ -82,7 +67,7 @@ include_once dirname(__FILE__) . '/header.html';
                                 <p class="message-start">
                                     <input type="button" id="appButton"
                                            class="button button-rounded button-primary" value="同步本地评论到畅言"
-                                           onclick="sync2Cyan('F');"
+                                           onclick="sync2Cyan(); return false;"
                                            style="width: 160px; text-align: center; vertical-align: middle" />
                                 </p>
 
@@ -98,7 +83,7 @@ include_once dirname(__FILE__) . '/header.html';
                                 <p class="message-start">
                                     <input type="button" id="appButton"
                                            class="button button-rounded button-primary" value="同步畅言评论到本地"
-                                           onClick="sync2WPress();return false;"
+                                           onClick="sync2WPress(); return false;"
                                            style="width: 160px; text-align: center; vertical-align: middle" />
                                 </p>
 
@@ -127,48 +112,10 @@ include_once dirname(__FILE__) . '/header.html';
             <td>
                 <table>
                     <tr>
-                        <td>DIV CLASS:</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <input type="text" id="div_class"
-                                   class="inputbox inputbox-disable"
-                                   disabled="disabled"
-                                   value="<?php
-                                       $div_class = $changyanPlugin->getOption('changyan_div_class');
-                                       echo $div_class;
-                                   ?>" placeholder="自定义样式名如:divleft" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>DIV STYLE:</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <input type="text" id="div_style"
-                                   class="inputbox inputbox-disable"
-                                   disabled="disabled"
-                                   value="<?php
-                                       $div_style = $changyanPlugin->getOption('changyan_div_style');
-                                       echo $div_style;
-                                   ?>" placeholder="自定义代码如:margin:0px;width:50px" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="text-align: left;">
-                            <p class="message-start">
-                            <input type="button" id="divButton"
-                                   class="button button-rounded" value="修改"
-                                   onclick="saveDivStyle();return false;"
-                                   style="width: 100px; text-align: center; vertical-align: middle" />
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
                         <td>
                             <label>
                                 <input type="checkbox" id="changyanStyle" name="changyanStyle" value="1"
-                                    <?php if (!get_option('changyan_isQuick')) echo 'checked'; ?> /> 开启兼容版本
+                                    <?php if (get_option('changyan_isQuick')) echo 'checked'; ?> /> 开启兼容版本
                             </label>
                         </td>
                     </tr>
@@ -184,37 +131,44 @@ include_once dirname(__FILE__) . '/header.html';
                  </table>
                  <h3>功能说明</h3>
                  <table>
-                    <tr><td>* DIV样式设置支持用户自定义css，实现对评论框颜色、高度、宽度等设置</td></tr>
-                    <tr><td>* 畅言评论框版本默认为高速版，兼容版本兼容性更好</td></tr>
+                    <tr><td>* 兼容版本自动适应PC/WAP页面</td></tr>
                     <tr><td>* SEO输出文章评论到当前网页、方便搜索引擎抓取</td></tr>
                  </table>
-                 <h3>实验室</h3>
-                 <table>
-                   <tr>
-                   <td>
-                        <label>
-                            <input type="checkbox" id="changyanCron" name="changyanCronCheckbox" value="0"
-                                <?php if (get_option('changyan_isCron')) echo 'checked'; ?> /> 定时从畅言同步评论到本地
-                        </label>
-                    </td>
+
+
+            </td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td>
+                <p class="start">&nbsp;</p>
+            </td>
+            <td>
+                <h3>实验室</h3>
+            </td>
+        </tr>
+        <tr>
+            <td />
+            <td>
+                <table>
+                    <tr>
+                        <td>
+                            <label>
+                                <input type="checkbox" id="changyanCron" name="changyanCronCheckbox" value="0"
+                                    <?php if (get_option('changyan_isScheduled')) echo 'checked'; ?> /> 定时从畅言同步评论到本地
+                            </label>
+                        </td>
                     </tr>
                     <tr>
-                    <td>
-                        <label>
-                            <input type="checkbox" id="changyanDebug" name="changyanDebug" value="0"
-                                <?php if (get_option('changyan_isDebug')) echo 'checked'; ?> /> 开启调试模式(正常情况下无需开启)
-                        </label>
-                    </td>
+                        <td>
+                            <label>
+                                <input type="checkbox" id="changyanDebug" name="changyanDebug" value="0"
+                                    <?php if (get_option('changyan_isDebug')) echo 'checked'; ?> /> 开启调试模式(正常情况下无需开启)
+                            </label>
+                        </td>
                     </tr>
-                    <tr>
-                    <td>
-                        <label>
-                            <input type="checkbox" id="changyanIframeJs" name="changyanIframeJs" value="0"
-                                <?php if (get_option('changyan_isIframeJs')) echo 'checked'; ?> /> 使用带广告服务的畅言代码<a href="http://changyan.kuaizhan.com/ad/main#notice" target="_blank">(说明)</a>
-                        </label>
-                    </td>
-                    </tr> 
-                 </table>
+                </table>
             </td>
         </tr>
     </table>
