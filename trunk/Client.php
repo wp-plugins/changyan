@@ -67,5 +67,4 @@ class ChangYan_Client {
 		$json = json_decode($response['body'], true);
 		return $json === null ? $response['body'] : $json;
 	}
-	
 }

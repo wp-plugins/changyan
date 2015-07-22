@@ -14,25 +14,6 @@ include_once dirname(__FILE__) . '/header.html';
 </div>
 
 <div class="margin heiti" style="width: 800px">
-    <br />
-    <table>
-        <tr>
-            <td>
-                <p class="start">&nbsp;</p>
-            </td>
-            <td>
-                <h3>注册账号</h3>
-            </td>
-        </tr>
-        <tr>
-            <td />
-            <td>
-                <span class="high">请按照提示<a
-                        href="http://www.kuaizhan.com/passport/?refer=http://changyan.kuaizhan.com/audit/comments/TOAUDIT/1" target="blank">注册</a>账号。
-                </span>
-            </td>
-        </tr>
-    </table>
     <br /><br />
     <table>
         <tr>
@@ -40,57 +21,40 @@ include_once dirname(__FILE__) . '/header.html';
                 <p class="start">&nbsp;</p>
             </td>
             <td>
-                <h3>账号设置</h3>
+                <h3>登录畅言</h3>
             </td>
         </tr>
         <tr>
             <td />
             <td>
-                <span class="high">请在<a
-                        href="http://changyan.kuaizhan.com/setting/common/further"
-                        target="blank">畅言站长管理后台</a>依次选择 “站点设置” - “通用设置” 获取APP ID和APP KEY并在下方提交。
-                </span>
-            </td>
-        </tr>
-
-        <tr>
-            <td />
-            <td>
+                <table id="login_info">
+                    <tr>
+                        <td> 账号: </td>
+                        <td>
+                            <input style="text-align:left;" type="text" id="username" value="" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td> 密码: </td>
+                        <td>
+                            <input style="text-align:left;" type="password" id="password" value="" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan=2 style="text-align: left;">
+                            <input type="button" id="appButton" class="button button-rounded button-primary" value="登录" onclick="changyanLogin();return false;" style="width: 100px; text-align: center; vertical-align: middle" />
+                        </td>
+                    </tr>
+                </table>
                 <table>
                     <tr>
-                        <td style="color: SteelBlue">APP ID:</td>
-                    </tr>
-                    <tr>
-                        <td><input type="text" id="appID" style="width: 210px"
-                                   value="<?php
-                                   $appId = $changyanPlugin->getOption('changyan_appId');
-                                   echo $appId;
-                                   ?>" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="color: SteelBlue">APP KEY:</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <input type="text" id="appKey" style="width: 210px"
-                                   value="<?php
-                                   $appKey = $changyanPlugin->getOption('changyan_appKey');
-                                   echo $appKey;
-                                   ?>" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="text-align: left;">
-                            <input type="button" id="appButton"
-                                   class="button button-rounded button-primary" value="提交"
-                                   onclick="saveAppKey_AppID();"
-                                   style="width: 100px; text-align: center; vertical-align: middle" />
+                        <td colspan="2" id="isvs_info">
                         </td>
                     </tr>
                 </table>
             </td>
         </tr>
+
     </table>
     <br /><br />
     <table>
@@ -99,29 +63,19 @@ include_once dirname(__FILE__) . '/header.html';
                 <p class="start">&nbsp;</p>
             </td>
             <td>
-                <h3>数据同步</h3>
-            </td>
-        </tr>
-        <tr>
-            <td />
-            <td><span> 将本地数据库中的评论同步到畅言，即刻享受畅言带来的便利。 </span>
+                <h3>没有畅言账号?</h3>
             </td>
         </tr>
         <tr>
             <td />
             <td>
-                <div id="cyan-WP2cyan">
-                    <p class="message-start">
-                        <input type="button" id="appButton"
-                               class="button button-rounded button-primary" value="同步本地评论到畅言"
-                               onclick="sync2Cyan('T');"
-                               style="width: 160px; text-align: center; vertical-align: middle" />
-                    </p>
-
-                    <p class="status"></p>
-
-                    <p class="message-complete">同步完成</p>
-                </div>
+                <table>
+                    <tr>
+                        <td style="text-align: left;">
+                            <input type="button" id="appButton" class="button button-rounded button-primary" value="注册" onclick="changyanRegister();return false;" style="width: 100px; text-align: center; vertical-align: middle" />
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>

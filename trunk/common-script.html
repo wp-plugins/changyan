@@ -15,152 +15,177 @@
     }
 </style>
 <script type="text/javascript">
-    function sync2WPress(flag) {
-        var $ = jQuery;
-        $('#cyan-export .status').empty();
-        $('#cyan-export').addClass('cyan-exporting');
-        var image = "<?php echo plugin_dir_url(__FILE__) . 'progressBar.gif'; ?>";
-        $('#cyan-export .status').html('正在同步 <img src="' + image + '" align="middle"/>');
+
+function sync2WPress(flag) {
+    var $ = jQuery;
+    var image = "<?php echo plugin_dir_url(__FILE__) . 'progressCircle.gif'; ?>";
+    $('#cyan-export .status').empty();
+    $('#cyan-export').addClass('cyan-exporting');
+    $('#cyan-export .status').html('正在同步 <img src="' + image + '" align="middle"/>');
+
+    var syncProgress = function () {
         $.ajax({
             url: ajaxurl,
-            dataType: 'text',
-            data: {
-                'action': flag=='syncing'?'changyan_getSyncProgress':'changyan_sync2WordPress'
-            },
-            timeout: 5000,
+            data: { 'action': 'changyan_sync2WordPress' },
             success: function(response) {
-                jsonData = JSON.parse(response);
-                if (jsonData.success == true) {
+                if (response.status == 0) {
                     $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
-                    $('#cyan-export .message-complete').html('同步完成,共'+jsonData.total_topics+'篇文章');
-                } else if (jsonData.success == 'syncing') {
-                    sync2WPress('syncing');
+                    $('#cyan-export .message-complete').html('同步完成');
+                } else if (response.status == 1) {
+                    $('#cyan-export .status').html('正在同步' + response.progress + '<img src="' + image + '" align="middle"/>');
+                    syncProgress();
                 } else {
-                    $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
-                    $('#cyan-export .message-complete').html('同步失败'+jsonData.message);
-                } 
-            },
-            error: function(XMLHttpRequest, error, status) {
-                if(error === 'timeout') {
-                    sync2WPress('syncing');
-                } else {
-                    $('#cyan-export').removeClass('cyan-exporting').addClass('cyan-exported');
-                    $('#cyan-export .message-complete').html('同步失败');
+                    alert('同步失败:' + response.error);
                 }
             },
-            complete: function() {
-            }
+            error:syncError,
+            dataType:'json'
         });
-    }
+    };
+    syncProgress();
+}
 
-    function sync2Cyan(flag) {
-        var $ = jQuery;
-        $('#cyan-WP2cyan .status').empty();
-        $('#cyan-WP2cyan').addClass('cyan-exporting');
-        var image = "<?php echo plugin_dir_url(__FILE__) . 'progressBar.gif'; ?>";
-        $('#cyan-WP2cyan .status').html('正在同步 <img src="' + image + '" align="middle"/>');
+function sync2Cyan() {
+    var $ = jQuery;
+    var image = "<?php echo plugin_dir_url(__FILE__) . 'progressCircle.gif'; ?>";
+    $('#cyan-WP2cyan .status').empty();
+    $('#cyan-WP2cyan').addClass('cyan-exporting');
+    $('#cyan-WP2cyan .status').html('正在同步 <img src="' + image + '" align="middle"/>');
+
+    var syncProgress = function () {
         $.ajax({
             url: ajaxurl,
-            dataType: 'text',
-            data: {
-                'action': flag=='syncing'?'changyan_getSyncProgress':'changyan_sync2Changyan'
-            },
-            timeout: 5000,
+            data: { 'action': 'changyan_sync2Changyan' },
             success: function(response) {
-                jsonData = JSON.parse(ResponseToJson(response));
-                if (jsonData.success == true) {
+                if (response.status == 0) {
                     $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
-                    $('#cyan-WP2cyan .message-complete').html('同步完成,共'+jsonData.total_topics+'篇文章');
-                } else if (jsonData.success == 'syncing'){
-                    sync2Cyan('syncing');
+                    $('#cyan-WP2cyan .message-complete').html('同步完成');
+                } else if (response.status == 1) {
+                    $('#cyan-WP2cyan .status').html('正在同步' + response.progress + '<img src="' + image + '" align="middle"/>');
+                    syncProgress();
                 } else {
-                    $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
-                    $('#cyan-WP2cyan .message-complete').html('同步失败'+jsonData.message);
+                    alert('同步失败:' + response.error);
                 }
             },
-            error: function(XMLHttpRequest, error, status) {
-                if(error === 'timeout') {
-                    sync2Cyan('syncing');
-                } else {
-                    $('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
-                    $('#cyan-WP2cyan .message-complete').html('同步失败');
-                }
-            },
-            complete: function() {
-            }
+            error:syncError,
+            dataType:'json'
         });
-    }
-    
-    function saveAppID() {
-        var $ = jQuery;
-        var appID = $('#appID').val();
-        if (appID.length != 9) {
-            return -1;
-        }
-        var data = {
-            action: 'changyan_saveAppID',
-            appID: appID,
-            dataType: 'json'
-        };
-        jQuery.post(ajaxurl, data, function(response) {
-            var jsonData = JSON.parse(ResponseToJson(response));
-            if (jsonData.success == 'true') {
-                $('#appID').val(appID);
-            } else {
-                alert('站点不存在，请检查AppID输入正确！');
-                return -1;
-            }
-        },"text");
-        return 0;
-    }
+    };
+    syncProgress();
+}
 
-    function saveAppKey() {
-        var $ = jQuery;
-        var appKey = $('#appKey').val();
-        if (appKey.length != 37) {
-            //return -1;
-        }
-        var data = {
-            action: 'changyan_saveAppKey',
-            appKey: appKey,
-            dataType: 'json'
-        };
-        $.post(ajaxurl, data, function(response) {
-            var jsonData = JSON.parse(ResponseToJson(response));
-            if (jsonData.success == 'true') {
-                $('#appKey').val(appKey);
-            }
-        },"text");
-        return 0;
-    }
+/*
+* param: string, "12/50"
+* return: true or false
+* */
+function syncFinished(progress){
+    var nums = progress.split('/');
+    return (parseInt(nums[0]) == parseInt(nums[1]));
+}
 
-    jQuery('#changyanCron').click(function() {
-        var $ = jQuery;
-        var isChecked = !!($(this).attr('checked'));
-        var data = {
-            action: 'changyan_cron',
-            isChecked: isChecked
-        };
-        $.post(
+/*
+* show ajax post error
+* */
+function syncError(xhr, error, status) {
+    //var $ = jQuery;
+    //$('#cyan-WP2cyan').removeClass('cyan-exporting').addClass('cyan-exported');
+    //$('#cyan-WP2cyan .message-complete').html('同步失败:{' + xhr.responseText + ',' + error + '}');
+    alert('同步失败:{' + xhr.responseText + ',' + error + '}');
+}
+
+// 开启SEO优化
+jQuery('#changyanSeo').click(function() {
+    var $ = jQuery;
+    var isSEOChecked = $(this).attr('checked');
+    var data = {
+        action: 'changyan_seo',
+        isSEOChecked: isSEOChecked
+    };
+    $.post(
             ajaxurl,
             data,
             function(response) {
-                if (response.success != 'true') {
-                    alert("自动同步配置提交异常，请检查您的网络设置");
+                if (response.success == 'true') {
+                    alert("设置保存成功");
+                } else {
+                    alert("提交异常，请检查您的网络设置");
                 }
             }
-        );
-    });
+    );
+});
 
+// 开启兼容版本
+jQuery('#changyanStyle').click(function() {
+    var $ = jQuery;
+    var isQuick = $(this).attr("checked");
+    var data = {
+        action: 'changyan_quick_load',
+        isQuick: isQuick
+    };
+    $.post(
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+                    alert("设置保存成功");
+                } else {
+                    alert("提交异常，请检查您的网络设置");
+                }
+            }
+    );
+});
 
-    jQuery('#changyanSeo').click(function() {
-        var $ = jQuery;
-        var isSEOChecked = !!($(this).attr('checked'));
-        var data = {
-            action: 'changyan_seo',
-            isSEOChecked: isSEOChecked
-        };
-        $.post(
+// 开启定时同步
+jQuery('#changyanCron').click(function() {
+    var $ = jQuery;
+    var isChecked = $(this).attr("checked");
+    var data = {
+        action: 'changyan_cron',
+        isChecked: isChecked
+    };
+    $.post(
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+                    alert("设置保存成功");
+                } else {
+                    alert("提交异常，请检查您的网络设置");
+                }
+            }
+    );
+});
+
+// 开启debug模式
+jQuery('#changyanDebug').click(function() {
+    var $ = jQuery;
+    var isDebug = $(this).attr("checked");
+    var data = {
+        action: 'changyan_debug',
+        isDebug: isDebug
+    };
+    $.post(
+            ajaxurl,
+            data,
+            function(response) {
+                if (response.success == 'true') {
+                    alert("设置保存成功");
+                } else {
+                    alert("提交异常，请检查您的网络设置");
+                }
+            }
+    );
+});
+
+// 开启热门评论
+jQuery('#changyanReping').click(function() {
+    var $ = jQuery;
+    var isReping = !!($(this).attr('checked'));
+    var data = {
+        action: 'changyan_reping',
+        isReping: isReping
+    };
+    $.post(
             ajaxurl,
             data,
             function(response) {
@@ -170,18 +195,18 @@
                     alert("提交异常，请检查您的网络设置");
                 }
             }
-        );
-    });
+    );
+});
 
-
-    jQuery('#changyanStyle').click(function() {
-        var $ = jQuery;
-        var isQuick = !($(this).attr('checked'));
-        var data = {
-            action: 'changyan_quick_load',
-            isQuick: isQuick
-        };
-        $.post(
+// 开启热门新闻
+jQuery('#changyanHotnews').click(function() {
+    var $ = jQuery;
+    var isHotnews = !!($(this).attr('checked'));
+    var data = {
+        action: 'changyan_hotnews',
+        isHotnews: isHotnews
+    };
+    $.post(
             ajaxurl,
             data,
             function(response) {
@@ -191,158 +216,121 @@
                     alert("提交异常，请检查您的网络设置");
                 }
             }
-        );
-    });
+    );
+});
 
-    // 实验室1: 开启热门评论
-    jQuery('#changyanReping').click(function() {
-        var $ = jQuery;
-        var isReping = !!($(this).attr('checked'));
-        var data = {
-            action: 'changyan_reping',
-            isReping: isReping
-        };
-        $.post(
+// 一键注册
+function changyanRegister() {
+    var $ = jQuery;
+    var data = {
+        action: 'changyan_register'
+    };
+    $.post(
             ajaxurl,
             data,
             function(response) {
                 if (response.success == 'true') {
-
+                    window.open("http://www.kuaizhan.com/passport/?refer=http://changyan.kuaizhan.com/audit/comments/TOAUDIT/1");
                 } else {
                     alert("提交异常，请检查您的网络设置");
                 }
             }
-        );
-    });
+    );
+}
 
-    // 实验室2: 开启热门新闻
-    jQuery('#changyanHotnews').click(function() {
-        var $ = jQuery;
-        var isHotnews = !!($(this).attr('checked'));
-        var data = {
-            action: 'changyan_hotnews',
-            isHotnews: isHotnews
-        };
-        $.post(
+function changyanLogin() {
+    var $ = jQuery;
+    var username = $('#username').val();
+    var password = $('#password').val();
+    var data = {
+        action: 'changyan_login',
+        username: username,
+        password: password
+    };
+    $.post(
             ajaxurl,
             data,
             function(response) {
                 if (response.success == 'true') {
-
+                    var isvsContent='';
+                    isvs = eval(eval(response)["isvs"]);
+                    $.each(isvs, function(i,item){
+                        var appId=item.appId;
+                        var appKey=item.appKey;
+                        var name=item.name;
+                        var id=item.id;
+                        var url=item.url;
+                        var checkedstr='';
+                        option_html = '<p><input type="radio" name="appInfo" id="appInfo'+id+'" value="'+appId+'|'+appKey+'"'+checkedstr+'> <label for="appInfo'+id+'">'+name+' ['+appId+' | '+url+']</label></p>';
+                        isvsContent = isvsContent + option_html;
+                    });
+                    var isvsForm = '<form id="isvs-form" method="POST" action="' +  ajaxurl +'">' + '<p><input type="hidden" name="action" value="changyan_appinfo"></p>';
+                    var isvsSubmit = '<input id="submit-isv" type="submit" value="使用选定的APP ID"> &nbsp或者&nbsp';
+                    var isvsAddnew = '<input id="add-isv" type="button" onclick="changyanAddIsv();return false;" value="添加一个新的APP ID">';
+                    var html = isvsForm + isvsContent + isvsSubmit + isvsAddnew;
+                    $("#isvs_info").html(html);
+                    $("#login_info").hide();
                 } else {
-                    alert("提交异常，请检查您的网络设置");
+                    //$("#isvsContent").html("没有获取到当前登录账号所对应的APPID信息");
+                    alert(response.msg);
                 }
             }
-        );
-    });
+    );
+}
 
-    // 开启debug
-    jQuery('#changyanDebug').click(function() {
-        var $ = jQuery;
-        var isDebug = !!($(this).attr('checked'));
-        var data = {
-            action: 'changyan_debug',
-            isDebug: isDebug
-        };
-        $.post(
+// 退出畅言帐号
+function changyanLogout() {
+    var $ = jQuery;
+    var data = {
+        action: 'changyan_logout'
+    };
+    $.post(
             ajaxurl,
             data,
             function(response) {
                 if (response.success == 'true') {
-
+                    (function(){
+                        var doc = document;
+                        var s = doc.createElement('script');
+                        var h = doc.getElementsByTagName('head')[0] || doc.head || doc.documentElement;
+                        s.type = 'text/javascript';
+                        s.charset = 'utf-8';
+                        s.src = 'http://changyan.kuaizhan.com/logout';
+                        h.insertBefore(s,h.firstChild);
+                        setTimeout(function() {
+                            window.location = window.location.pathname + '?page=changyan';
+                        },1000);
+                    })();
                 } else {
                     alert("提交异常，请检查您的网络设置");
                 }
             }
-        );
-    });
-    // 使用iframe版代码
-    jQuery('#changyanIframeJs').click(function() {
-        var $ = jQuery;
-        var isIframeJs = !!($(this).attr('checked'));
-        var data = {
-            action: 'changyan_iframejs',
-            isIframeJs: isIframeJs
-        };
-        $.post(
+    );
+}
+
+// 新建 ISV
+function changyanAddIsv() {
+    var $ = jQuery;
+    var data = {
+        action: 'changyan_add_isv'
+    };
+    $.post(
             ajaxurl,
             data,
             function(response) {
                 if (response.success == 'true') {
-
+                    location.reload();
                 } else {
-                    alert("提交异常，请检查您的网络设置");
+                    alert(response.msg);
                 }
-            }
-        );
-    });
-    function saveAppKey_AppID() {
-        var $ = jQuery;
-        var $appButton = $('#appButton');
-        var buttonName = $appButton.val();
-        if (buttonName == "提交") {
-            if (-1 == saveAppID()) {
-                alert("请输入正确的APP ID");
-                return;
-            }
-            if (-1 == saveAppKey()) {
-                alert("请输入正确的APP KEY");
-                return;
-            }
-            $('#appID').attr('disabled', true);
-            $('#appID').addClass('inputbox-disable');
-            $('#appKey').attr('disabled', true);
-            $('#appKey').addClass('inputbox-disable');
-            $appButton.removeClass('button-primary').val("修改");
-        } else {
-            $('#appID').attr('disabled', false);
-            $('#appID').removeClass('inputbox-disable');
-            $('#appKey').attr('disabled', false);
-            $('#appKey').removeClass('inputbox-disable');
-            $appButton.addClass('button-primary').val("提交");
-        }
-    }
 
-    function saveDivStyle() {
-        var $ = jQuery;
-        var $divButton = $('#divButton');
-        var buttonName = $divButton.val();
-        if (buttonName == "提交") {
-            var divClass = $('#div_class').val();
-            var divStyle = $('#div_style').val();
-            var data = {
-                action: 'changyan_style',
-                div_class: divClass,
-                div_style: divStyle
-            };
-            $.post(
-                ajaxurl,
-                data,
-                function(response) {
-                    if (response.success == 'true') {
-                        alert("提交成功！");
-                    } else {
-                        alert("提交异常，请检查您的网络设置");
-                    }
-                }
-            );
-            $('#div_class').attr('disabled', true);
-            $('#div_class').addClass('inputbox-disable');
-            $('#div_style').attr('disabled', true);
-            $('#div_style').addClass('inputbox-disable');
-            $divButton.removeClass('button-primary').val("修改");
-        } else {
-            $('#div_class').attr('disabled', false);
-            $('#div_class').removeClass('inputbox-disable');
-            $('#div_style').attr('disabled', false);
-            $('#div_style').removeClass('inputbox-disable');
-            $divButton.addClass('button-primary').val("提交");
-        }
-    }
+            }
+    );
+}
 
-    function ResponseToJson(response) {
-        var pattern = /^changyan\w*\n/;
-        response = response.replace(pattern,'');
-        return response;
-    }
+function ResponseToJson(response) {
+    var pattern = /^changyan\w*\n/;
+    response = response.replace(pattern,'');
+    return response;
+}
 </script>
