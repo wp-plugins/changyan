@@ -3,7 +3,7 @@
 Plugin Name: 畅言评论系统
 Plugin URI: http://wordpress.org/plugins/changyan/
 Description: 即装即用，永久免费的社会化评论系统。为各类网站提供新浪微博、QQ、人人、搜狐等账号登录评论功能，同时提供强大的内容管理后台和智能云过滤服务。
-Version:  2.0
+Version:  2.0.2
 Author: 搜狐畅言
 Author URI: http://changyan.sohu.com
  */
@@ -49,6 +49,7 @@ function changyan_get_transport()
 if (false === extension_loaded('json')) {
     include CHANGYAN_PLUGIN_PATH . '/Services_JSON.php';
 }
+require_once CHANGYAN_PLUGIN_PATH . '/Client.php';
 require_once CHANGYAN_PLUGIN_PATH . '/Abstract.php';
 require_once CHANGYAN_PLUGIN_PATH . '/Handler.php';
 
@@ -173,6 +174,7 @@ function changyan_deactivate()
     // Delete all options deserved when deactivited
     $changyanPlugin->delOption('changyan_lastCmtID2CY');
     $changyanPlugin->delOption('changyan_lastTimeSync2WP');
+    $changyanPlugin->delOption('changyan_sync_progress');
     $changyanPlugin->delOption('changyan_appId');
     $changyanPlugin->delOption('changyan_appKey');
     $changyanPlugin->delOption('changyan_username');

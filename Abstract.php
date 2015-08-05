@@ -17,7 +17,7 @@ class Changyan_Abstract {
         $lasttrace = $backtrace[0];
         $file = $lasttrace ['file'];
         $line = $lasttrace['line'];
-        $time = date('Y-m-d h-i-s', time());
+        $time = date('Y-m-d H-i-s', time());
         $os = (DIRECTORY_SEPARATOR=='\\')?"windows":'linux';
         if($os == 'windows') {
             $debug_file = 'c:\tmp\cy' . date("Y-m-d") . '.log';
@@ -37,12 +37,12 @@ class Changyan_Abstract {
         $lasttrace = $backtrace[0];
         $file = $lasttrace ['file'];
         $line = $lasttrace['line'];
-        $time = date('Y-m-d h-i-s', time());
+        $time = date('Y-m-d H-i-s', time());
         $os = (DIRECTORY_SEPARATOR=='\\')?"windows":'linux';
         if($os == 'windows') {
-            $debug_html = get_home_path().'\\'.'debug.html';
+            $debug_html = dirname( dirname(__FILE__) ) .'\\'.'debug.html';
         } else if($os == 'linux') {
-            $debug_html = get_home_path().'//'.'debug.html';
+            $debug_html = dirname( dirname(__FILE__) ) .'//'.'debug.html';
         }
         if($new == true) {
             file_put_contents($debug_html,"$file:$line:$time: $msg<br><br>");

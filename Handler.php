@@ -236,7 +236,7 @@ EOT;
             'url' => $url
         );
         $client = new ChangYan_Client();
-        $url = 'http://changyan.kuaizhan.com/extension/login';
+        $url = 'http://changyan.kuaizhan.com/extension/add-isv';
         $rs = $client->httpRequest($url, 'POST', $params);
         header( "Content-Type: application/json" );
         if ( $rs['code'] == 0) {

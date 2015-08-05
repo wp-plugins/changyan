@@ -1,7 +1,7 @@
 <?php
 
 define('SYNC2CY_QUERY_LIMIT',30);
-define('SYNC2WP_LOAD_LIMIT',2);
+define('SYNC2WP_LOAD_LIMIT',5);
 define('SYNC_FINISH_CODE',0);
 define('SYNC_CONTINUE_CODE',1);
 define('SYNC_ERROR_CODE',3);
@@ -10,7 +10,6 @@ ini_set('max_execution_time', '0');
 class Changyan_Synchronizer extends Changyan_Abstract
 {
     private static $instance = null;
-    private $debug = false;
     private $PluginURL = 'changyan';
 
     public function __construct()
@@ -54,7 +53,6 @@ class Changyan_Synchronizer extends Changyan_Abstract
         @ini_set('memory_limit', '256M');
         @date_default_timezone_set('PRC');
 
-        $this->debug = get_option('changyan_isDebug');
         $lastSyncedCmtID = $this->getOption('changyan_lastCmtID2CY');
         if(empty($lastSyncedCmtID)) {
             $lastSyncedCmtID = 0;
@@ -150,7 +148,7 @@ class Changyan_Synchronizer extends Changyan_Abstract
                 'comments' => $comments
             );
         }
-        $this->outputTrace2Html(sprintf("package topic: url=%s , sum of cmt=%d", $topic_url, count($comments)));
+        $this->outputTrace2Html(sprintf("package topic: url=%s , sum of cmts=%d", $topic_url, count($comments)));
         return $topicInfo;
     }
 
@@ -171,9 +169,10 @@ class Changyan_Synchronizer extends Changyan_Abstract
         $md5 = hash_hmac('sha1', $topicsJson, $appKey);
         $url = 'http://changyan.sohu.com/admin/api/import/comment';
         $postData = "appid=" . $appId . "&md5=" . $md5 . "&jsondata=" . $topicsJson;
+        $this->outputTrace2Html(sprintf("request param: appId=%s md5=%s",$appId,$md5));
         $client = new ChangYan_Client();
         $response = $client->httpRequest($url, 'POST', $postData);
-        $this->outputTrace2Html(sprintf("import topics to changyan: %s, ", json_encode($response)));
+        $this->outputTrace2Html(sprintf("import topics to changyan: %s", print_r($response,true)));
         if(isset($response['success'])) {
             return $response['success'];
         }
@@ -190,7 +189,7 @@ class Changyan_Synchronizer extends Changyan_Abstract
         @ini_set('memory_limit', '256M');
         @date_default_timezone_set('PRC');
 
-        $this->debug = get_option('changyan_isDebug');
+
         $appId = $this->getOption('changyan_appId');
         $lastTime2WP = $this->getOption('changyan_lastTimeSync2WP'); // PRC Time
         if(empty($lastTime2WP)) {
@@ -226,22 +225,25 @@ class Changyan_Synchronizer extends Changyan_Abstract
     private function getRecentFormChangyan($appId, $time, $offset=0, $limit=50)
     {
         $topics = null;
+        $sum = 0;
         $params = array(
             'appId' => $appId,
             'date' => date('Y-m-d H:i:s', $time)
         );
         $url = "http://changyan.sohu.com/admin/api/recent-comment-topics";
+        $this->outputTrace2Html(sprintf("request param: %s", print_r($params,true) ));
         $client = new ChangYan_Client();
         $response = $client->httpRequest($url, 'GET', $params);
         if(isset($response)) {
             if( $response['success'] == true && is_array($response['topics']) ) {
+                $sum = count($response['topics']);
                 $topics = array_slice($response['topics'], $offset, $limit);
             } else {
-                $this->outputTrace2Html("get recent from changyan error!");
+                $this->outputTrace2Html("get recent from changyan error! msg=".$response['msg']);
                 $topics = null;
             }
         }
-        $this->outputTrace2Html(sprintf("get %d recent topics, offset=%d, limit=%d", count($topics), $offset, $limit));
+        $this->outputTrace2Html(sprintf("get %d / %d recent topics, offset=%d, limit=%d", count($topics), $sum, $offset, $limit));
         return $topics;
     }
 
@@ -269,6 +271,7 @@ class Changyan_Synchronizer extends Changyan_Abstract
             'order_by'=>'time_desc'
         );
         $url = 'http://changyan.sohu.com/api/2/topic/comments';
+        $this->outputTrace2Html(sprintf("request param: %s", print_r($params,true) ));
         $client = new ChangYan_Client();
         $response = $client->httpRequest($url, 'GET', $params);
         if (isset($response['error_code'])) {
@@ -408,7 +411,8 @@ class Changyan_Synchronizer extends Changyan_Abstract
         return delete_option($option);
     }
 
-    private function get_avatar_src($user_mail) {
+    private function get_avatar_src($user_mail) 
+    {
         $img = get_avatar($user_mail, '48');
         if(preg_match_all('/src=\'(.*)\'/iU', $img, $matches)) {
             return $matches[1][0];
@@ -416,16 +420,15 @@ class Changyan_Synchronizer extends Changyan_Abstract
         return '';
     }
 
-    public function getSyncProgress() {
-        session_start();
-        return $_SESSION['changyan_sync_progress'];
+    public function getSyncProgress() 
+    {
+        return $this->getOption('changyan_sync_progress');
     }
 
-    private function setSyncProgress($cmtId) {
-        $this->outputTrace2Html(sprintf("set progress: %s",print_r($cmtId,true)));
-        session_start();
-        $_SESSION['changyan_sync_progress'] = $cmtId;
-        session_write_close();
+    private function setSyncProgress($progress) 
+    {
+        $this->outputTrace2Html('set progress = '.$progress);
+        $this->setOption('changyan_sync_progress', $progress);
     }
 }
 
